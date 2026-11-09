@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Google Meet Attendance Tracker",
-  "version": "1.0.0",
-  "description": "Локальний трекер відвідуваності та аналітики уроків і зустрічей Google Meet без сторонніх хмар.",
+  "version": "1.1.0",
+  "description": "Local-only Google Meet attendance & lesson analytics tracker with PNG/CSV reports (UA / EN).",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -36,6 +36,7 @@
         "https://meet.google.com/*"
       ],
       "js": [
+        "i18n.js",
         "storage.js",
         "card-generator.js",
         "content.js"

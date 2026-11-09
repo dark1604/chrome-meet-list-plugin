@@ -19,66 +19,43 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
         </div>
-        <div>
+        <div style="flex: 1;">
           <h1 class="brand-title">Meet Tracker</h1>
-          <span class="brand-badge">100% Локально</span>
+          <span class="brand-badge" data-i18n="brand_badge">100% Локально</span>
+        </div>
+        <div class="lang-switcher" title="Language / Мова">
+          <button type="button" class="lang-btn active" data-lang-switch="uk">UA</button>
+          <button type="button" class="lang-btn" data-lang-switch="en">EN</button>
         </div>
       </div>
 
       <nav class="nav-menu">
-        <div class="nav-section-title">ЖУРНАЛ ТА ЗВІТИ</div>
+        <div class="nav-section-title" data-i18n="nav_section_reports">ЖУРНАЛ ТА ЗВІТИ</div>
 
-        <button class="nav-item active" data-tab="meetings-tab">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
+        <button class="nav-item active" data-tab="meetings-tab" data-i18n="nav_all_meetings">
           📋 Всі заняття
         </button>
 
-        <button class="nav-item" data-tab="subjects-tab">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-          </svg>
+        <button class="nav-item" data-tab="subjects-tab" data-i18n="nav_by_subjects">
           📚 За предметами
         </button>
 
-        <button class="nav-item" data-tab="classes-tab">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
+        <button class="nav-item" data-tab="classes-tab" data-i18n="nav_by_classes">
           🏫 За класами (1-11)
         </button>
 
-        <button class="nav-item" data-tab="students-tab">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
+        <button class="nav-item" data-tab="students-tab" data-i18n="nav_by_students">
           👤 За учнями
         </button>
 
-        <div class="nav-section-title" style="margin-top: 16px;">НАЛАШТУВАННЯ</div>
+        <div class="nav-section-title" style="margin-top: 16px;" data-i18n="nav_section_settings">НАЛАШТУВАННЯ</div>
 
-        <button class="nav-item" data-tab="presets-tab">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          Заготовки та класи
+        <button class="nav-item" data-tab="presets-tab" data-i18n="nav_presets_classes">
+          ⚙️ Заготовки та класи
         </button>
 
-        <button class="nav-item" data-tab="backup-tab">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Резервна копія
+        <button class="nav-item" data-tab="backup-tab" data-i18n="nav_backup">
+          💾 Резервна копія
         </button>
       </nav>
 
@@ -86,8 +63,8 @@
         <div class="storage-info">
           <div class="storage-icon">🔒</div>
           <div class="storage-text">
-            <b>Безпечне сховище</b>
-            <span>Дані зберігаються виключно на вашому комп'ютері.</span>
+            <b data-i18n="sidebar_secure_title">Безпечне сховище</b>
+            <span data-i18n="sidebar_secure_desc">Дані зберігаються виключно на вашому комп'ютері.</span>
           </div>
         </div>
       </div>
@@ -99,11 +76,11 @@
       <section id="meetings-tab" class="tab-pane active">
         <header class="content-header">
           <div>
-            <h2 class="page-title">Журнал відвідуваності</h2>
-            <p class="page-subtitle">Історія всіх проведених уроків та онлайн-зустрічей Google Meet</p>
+            <h2 class="page-title" data-i18n="tab1_title">Журнал відвідуваності</h2>
+            <p class="page-subtitle" data-i18n="tab1_subtitle">Історія всіх проведених уроків та онлайн-зустрічей Google Meet</p>
           </div>
           <div class="header-actions">
-            <button id="btn-refresh" class="btn btn-secondary">
+            <button id="btn-refresh" class="btn btn-secondary" data-i18n="btn_refresh">
               🔄 Оновити
             </button>
           </div>
@@ -113,22 +90,22 @@
         <div class="filter-bar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="search-input" placeholder="Пошук за предметом, класом, темою або учнем...">
+            <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Пошук за предметом, класом, темою або учнем...">
           </div>
 
           <div class="filter-controls">
             <select id="filter-subject" class="select-control">
-              <option value="">Всі предмети</option>
+              <option value="" data-i18n="filter_all_subjects">Всі предмети</option>
             </select>
 
             <select id="filter-class" class="select-control">
-              <option value="">Всі класи</option>
+              <option value="" data-i18n="filter_all_classes">Всі класи</option>
             </select>
 
             <select id="sort-order" class="select-control">
-              <option value="newest">Найновіші спочатку</option>
-              <option value="oldest">Найстаріші спочатку</option>
-              <option value="participants">За кількістю учнів</option>
+              <option value="newest" data-i18n="sort_newest">Найновіші спочатку</option>
+              <option value="oldest" data-i18n="sort_oldest">Найстаріші спочатку</option>
+              <option value="participants" data-i18n="sort_participants">За кількістю учнів</option>
             </select>
           </div>
         </div>
@@ -137,15 +114,15 @@
         <div class="stats-overview">
           <div class="stat-card">
             <div class="stat-num" id="stat-total-meetings">0</div>
-            <div class="stat-label">Проведено занять</div>
+            <div class="stat-label" data-i18n="stat_total_meetings">Проведено занять</div>
           </div>
           <div class="stat-card">
             <div class="stat-num" id="stat-total-students">0</div>
-            <div class="stat-label">Унікальних учнів</div>
+            <div class="stat-label" data-i18n="stat_total_students">Унікальних учнів</div>
           </div>
           <div class="stat-card">
-            <div class="stat-num" id="stat-total-hours">0 г 00 хв</div>
-            <div class="stat-label">Сумарний час у Meet</div>
+            <div class="stat-num" id="stat-total-hours">0 хв</div>
+            <div class="stat-label" data-i18n="stat_total_hours">Сумарний час у Meet</div>
           </div>
         </div>
 
@@ -156,8 +133,8 @@
 
         <div id="empty-state" class="empty-state" style="display: none;">
           <div class="empty-icon">📂</div>
-          <h3>Жодних занять не знайдено</h3>
-          <p>Коли ви почнете та завершите зустріч у Google Meet, дані про учнів з'являться тут автоматично.</p>
+          <h3 data-i18n="empty_title">Жодних занять не знайдено</h3>
+          <p data-i18n="empty_desc">Коли ви почнете та завершите зустріч у Google Meet, дані про учнів з'являться тут автоматично.</p>
         </div>
       </section>
 
@@ -165,13 +142,13 @@
       <section id="subjects-tab" class="tab-pane">
         <header class="content-header">
           <div>
-            <h2 class="page-title">Аналітика за предметами</h2>
-            <p class="page-subtitle">Перевірка відвідуваності та історії занять окремо для кожного предмета</p>
+            <h2 class="page-title" data-i18n="tab2_title">Аналітика за предметами</h2>
+            <p class="page-subtitle" data-i18n="tab2_subtitle">Перевірка відвідуваності та історії занять окремо для кожного предмета</p>
           </div>
         </header>
 
         <div class="analytics-filter-box">
-          <label class="form-label">Оберіть предмет для перевірки:</label>
+          <label class="form-label" data-i18n="tab2_select_label">Оберіть предмет для перевірки:</label>
           <select id="select-analytics-subject" class="select-control large-select">
             <!-- Динамічно заповнюється -->
           </select>
@@ -180,20 +157,20 @@
         <div class="stats-overview" id="subject-stats-overview" style="margin-top: 20px;">
           <div class="stat-card">
             <div class="stat-num" id="stat-subject-lessons">0</div>
-            <div class="stat-label">Уроків з предмета</div>
+            <div class="stat-label" data-i18n="stat_subject_lessons">Уроків з предмета</div>
           </div>
           <div class="stat-card">
             <div class="stat-num" id="stat-subject-time">0 хв</div>
-            <div class="stat-label">Загальний час</div>
+            <div class="stat-label" data-i18n="stat_subject_time">Загальний час</div>
           </div>
           <div class="stat-card">
             <div class="stat-num" id="stat-subject-avg-students">0</div>
-            <div class="stat-label">Сер. кількість учнів</div>
+            <div class="stat-label" data-i18n="stat_subject_avg">Сер. кількість учнів</div>
           </div>
         </div>
 
         <div class="analytics-results-card">
-          <h3 class="section-heading">Усі проведені уроки з цього предмета:</h3>
+          <h3 class="section-heading" data-i18n="tab2_list_heading">Усі проведені уроки з цього предмета:</h3>
           <div id="subject-lessons-list" class="meetings-grid">
             <!-- Список уроків вибраного предмета -->
           </div>
@@ -204,13 +181,13 @@
       <section id="classes-tab" class="tab-pane">
         <header class="content-header">
           <div>
-            <h2 class="page-title">Аналітика за класами (1–11 класи)</h2>
-            <p class="page-subtitle">Перевірка відвідуваності окремо для конкретного класу по всіх предметах</p>
+            <h2 class="page-title" data-i18n="tab3_title">Аналітика за класами (1–11 класи)</h2>
+            <p class="page-subtitle" data-i18n="tab3_subtitle">Перевірка відвідуваності окремо для конкретного класу по всіх предметах</p>
           </div>
         </header>
 
         <div class="analytics-filter-box">
-          <label class="form-label">Оберіть клас для аналізу:</label>
+          <label class="form-label" data-i18n="tab3_select_label">Оберіть клас для аналізу:</label>
           <select id="select-analytics-class" class="select-control large-select">
             <!-- Динамічно заповнюється 1-11 класами -->
           </select>
@@ -219,20 +196,20 @@
         <div class="stats-overview" id="class-stats-overview" style="margin-top: 20px;">
           <div class="stat-card">
             <div class="stat-num" id="stat-class-lessons">0</div>
-            <div class="stat-label">Уроків для цього класу</div>
+            <div class="stat-label" data-i18n="stat_class_lessons">Уроків для цього класу</div>
           </div>
           <div class="stat-card">
             <div class="stat-num" id="stat-class-students-count">0</div>
-            <div class="stat-label">Учнів у класі</div>
+            <div class="stat-label" data-i18n="stat_class_students">Учнів у класі</div>
           </div>
           <div class="stat-card">
             <div class="stat-num" id="stat-class-total-time">0 хв</div>
-            <div class="stat-label">Загальний час занять</div>
+            <div class="stat-label" data-i18n="stat_class_time">Загальний час занять</div>
           </div>
         </div>
 
         <div class="analytics-results-card">
-          <h3 class="section-heading">Заняття вибраного класу:</h3>
+          <h3 class="section-heading" data-i18n="tab3_list_heading">Заняття вибраного класу:</h3>
           <div id="class-lessons-list" class="meetings-grid">
             <!-- Список занять обраного класу -->
           </div>
@@ -243,18 +220,18 @@
       <section id="students-tab" class="tab-pane">
         <header class="content-header">
           <div>
-            <h2 class="page-title">Персональна аналітика учня</h2>
-            <p class="page-subtitle">Перевірка присутності, запізнень та повної історії уроків конкретного учня</p>
+            <h2 class="page-title" data-i18n="tab4_title">Персональна аналітика учня</h2>
+            <p class="page-subtitle" data-i18n="tab4_subtitle">Перевірка присутності, запізнень та повної історії уроків конкретного учня</p>
           </div>
         </header>
 
         <div class="analytics-filter-box">
-          <label class="form-label">Оберіть учня або почніть вводити ім'я:</label>
+          <label class="form-label" data-i18n="tab4_select_label">Оберіть учня або почніть вводити ім'я:</label>
           <div class="student-search-row">
             <select id="select-analytics-student" class="select-control large-select" style="flex: 1;">
               <option value="">-- Оберіть учня зі списку --</option>
             </select>
-            <button id="btn-export-student-dossier" class="btn btn-primary" style="display: none;">
+            <button id="btn-export-student-dossier" class="btn btn-primary" style="display: none;" data-i18n="btn_export_dossier">
               📥 Експорт табеля учня (CSV)
             </button>
           </div>
@@ -266,38 +243,38 @@
             <div class="dossier-avatar">👤</div>
             <div>
               <h3 id="dossier-student-name" class="dossier-name">Ім'я учня</h3>
-              <p class="dossier-sub" id="dossier-student-sub">Статистика за весь навчальний період</p>
+              <p class="dossier-sub" id="dossier-student-sub" data-i18n="dossier_subtitle">Статистика за весь навчальний період</p>
             </div>
           </div>
 
           <div class="stats-overview" style="margin-top: 18px;">
             <div class="stat-card">
               <div class="stat-num" id="dossier-lessons-count">0</div>
-              <div class="stat-label">Відвідано занять</div>
+              <div class="stat-label" data-i18n="stat_student_lessons">Відвідано занять</div>
             </div>
             <div class="stat-card">
               <div class="stat-num" id="dossier-total-time">0 хв</div>
-              <div class="stat-label">Сумарний час на уроках</div>
+              <div class="stat-label" data-i18n="stat_student_time">Сумарний час на уроках</div>
             </div>
             <div class="stat-card">
               <div class="stat-num" id="dossier-avg-attendance">0%</div>
-              <div class="stat-label">Середня присутність</div>
+              <div class="stat-label" data-i18n="stat_student_avg">Середня присутність</div>
             </div>
           </div>
 
-          <h4 style="margin: 24px 0 12px 0;">Історія відвідуваності уроків:</h4>
+          <h4 style="margin: 24px 0 12px 0;" data-i18n="dossier_history_heading">Історія відвідуваності уроків:</h4>
           <div class="table-responsive">
             <table class="report-table">
               <thead>
                 <tr>
-                  <th>Дата</th>
-                  <th>Предмет</th>
-                  <th>Клас</th>
-                  <th>Перший вхід</th>
-                  <th>Останній вихід</th>
-                  <th>Час на уроці</th>
-                  <th>Присутність</th>
-                  <th>Статус</th>
+                  <th data-i18n="th_date">Дата</th>
+                  <th data-i18n="th_subject">Предмет</th>
+                  <th data-i18n="th_class">Клас</th>
+                  <th data-i18n="th_first_join">Перший вхід</th>
+                  <th data-i18n="th_last_leave">Останній вихід</th>
+                  <th data-i18n="th_duration">Час на уроці</th>
+                  <th data-i18n="th_attendance">Присутність</th>
+                  <th data-i18n="th_status">Статус</th>
                 </tr>
               </thead>
               <tbody id="student-history-tbody">
@@ -312,23 +289,23 @@
       <section id="presets-tab" class="tab-pane">
         <header class="content-header">
           <div>
-            <h2 class="page-title">Заготовки предметів та класів</h2>
-            <p class="page-subtitle">Додавайте та редагуйте назви предметів і класів для швидкого вибору після уроку</p>
+            <h2 class="page-title" data-i18n="tab5_title">Заготовки предметів та класів</h2>
+            <p class="page-subtitle" data-i18n="tab5_subtitle">Додавайте та редагуйте назви предметів і класів для швидкого вибору після уроку</p>
           </div>
         </header>
 
         <div class="presets-management-layout">
           <!-- Блок предметів -->
           <div class="preset-manager-card">
-            <h3>📚 Заготовки предметів</h3>
+            <h3 data-i18n="presets_card_title">📚 Заготовки предметів</h3>
             <form id="form-add-preset" class="add-preset-form" style="margin-top: 14px;">
-              <input type="text" id="input-new-preset" class="form-input" placeholder="Новий предмет (наприклад: Астрономія)..." required>
-              <button type="submit" class="btn btn-primary">➕ Додати</button>
+              <input type="text" id="input-new-preset" class="form-input" data-i18n-placeholder="input_new_preset_placeholder" placeholder="Новий предмет (наприклад: Астрономія)..." required>
+              <button type="submit" class="btn btn-primary" data-i18n="btn_add">➕ Додати</button>
             </form>
 
             <div class="presets-section-title">
-              <span>Список активних предметів:</span>
-              <button id="btn-reset-presets" class="btn btn-sm btn-link">Скинути до стандартних</button>
+              <span data-i18n="presets_active_list">Список активних предметів:</span>
+              <button id="btn-reset-presets" class="btn btn-sm btn-link" data-i18n="btn_reset_presets">Скинути до стандартних</button>
             </div>
 
             <div id="presets-list" class="presets-tags-cloud"></div>
@@ -336,15 +313,15 @@
 
           <!-- Блок класів -->
           <div class="preset-manager-card" style="margin-top: 24px;">
-            <h3>🏫 Класи (1–11 класи)</h3>
+            <h3 data-i18n="classes_card_title">🏫 Класи (1–11 класи)</h3>
             <form id="form-add-class" class="add-preset-form" style="margin-top: 14px;">
-              <input type="text" id="input-new-class" class="form-input" placeholder="Новий клас (наприклад: 8-В клас)..." required>
-              <button type="submit" class="btn btn-primary">➕ Додати клас</button>
+              <input type="text" id="input-new-class" class="form-input" data-i18n-placeholder="input_new_class_placeholder" placeholder="Новий клас (наприклад: 8-В клас)..." required>
+              <button type="submit" class="btn btn-primary" data-i18n="btn_add_class">➕ Додати клас</button>
             </form>
 
             <div class="presets-section-title">
-              <span>Список класів:</span>
-              <button id="btn-reset-classes" class="btn btn-sm btn-link">Відновити 1-11 класи</button>
+              <span data-i18n="classes_active_list">Список класів:</span>
+              <button id="btn-reset-classes" class="btn btn-sm btn-link" data-i18n="btn_reset_classes">Відновити 1-11 класи</button>
             </div>
 
             <div id="classes-list" class="presets-tags-cloud"></div>
@@ -356,32 +333,32 @@
       <section id="backup-tab" class="tab-pane">
         <header class="content-header">
           <div>
-            <h2 class="page-title">Керування локальними даними</h2>
-            <p class="page-subtitle">Створюйте копії журналу на своєму диску та відновлюйте дані у разі потреби</p>
+            <h2 class="page-title" data-i18n="tab6_title">Керування локальними даними</h2>
+            <p class="page-subtitle" data-i18n="tab6_subtitle">Створюйте копії журналу на своєму диску та відновлюйте дані у разі потреби</p>
           </div>
         </header>
 
         <div class="backup-cards-grid">
           <div class="card backup-card">
             <div class="card-icon">💾</div>
-            <h3>Експорт всієї бази (JSON)</h3>
-            <p>Збережіть усі зустрічі, історію відвідуваності та заготовки уроків у єдиний файл на свій комп'ютер.</p>
-            <button id="btn-export-backup" class="btn btn-primary">Завантажити файл резервної копії</button>
+            <h3 data-i18n="backup_export_title">Експорт всієї бази (JSON)</h3>
+            <p data-i18n="backup_export_desc">Збережіть усі зустрічі, історію відвідуваності та заготовки уроків у єдиний файл на свій комп'ютер.</p>
+            <button id="btn-export-backup" class="btn btn-primary" data-i18n="btn_download_backup">Завантажити файл резервної копії</button>
           </div>
 
           <div class="card backup-card">
             <div class="card-icon">📥</div>
-            <h3>Імпорт з резервної копії</h3>
-            <p>Відновіть дані журналу з раніше збереженого JSON-файлу.</p>
+            <h3 data-i18n="backup_import_title">Імпорт з резервної копії</h3>
+            <p data-i18n="backup_import_desc">Відновіть дані журналу з раніше збереженого JSON-файлу.</p>
             <input type="file" id="file-import-input" accept=".json" style="display: none;">
-            <button id="btn-trigger-import" class="btn btn-secondary">Обрати файл для відновлення</button>
+            <button id="btn-trigger-import" class="btn btn-secondary" data-i18n="btn_choose_import">Обрати файл для відновлення</button>
           </div>
 
           <div class="card backup-card danger-card">
             <div class="card-icon">⚠️</div>
-            <h3>Очищення бази даних</h3>
-            <p>Повне видалення всієї локальної історії занять. Цю дію неможливо скасувати.</p>
-            <button id="btn-clear-database" class="btn btn-danger">Видалити всі записи</button>
+            <h3 data-i18n="backup_clear_title">Очищення бази даних</h3>
+            <p data-i18n="backup_clear_desc">Повне видалення всієї локальної історії занять. Цю дію неможливо скасувати.</p>
+            <button id="btn-clear-database" class="btn btn-danger" data-i18n="btn_clear_all">Видалити всі записи</button>
           </div>
         </div>
       </section>
@@ -397,7 +374,7 @@
             <span id="modal-subject-badge" class="subject-badge">Предмет</span>
             <span id="modal-class-badge" class="class-badge" style="display: none;">Клас</span>
           </div>
-          <h2 id="modal-title" class="modal-heading">Деталі уроку</h2>
+          <h2 id="modal-title" class="modal-heading" data-i18n="modal_heading_default">Деталі уроку</h2>
           <div id="modal-meta" class="modal-meta"></div>
         </div>
         <button id="btn-close-modal" class="btn-close">&times;</button>
@@ -406,49 +383,49 @@
       <div class="modal-body">
         <!-- Панель швидкого редагування метаданих уроку -->
         <div id="modal-edit-panel" class="notes-box" style="display: none; margin-top: 0; margin-bottom: 18px;">
-          <h4 style="margin-bottom: 12px; color: #38bdf8;">✏️ Редагування даних уроку:</h4>
+          <h4 style="margin-bottom: 12px; color: #38bdf8;" data-i18n="edit_panel_title">✏️ Редагування даних уроку:</h4>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
             <div>
-              <label class="form-label" style="font-size: 12px;">Предмет:</label>
+              <label class="form-label" style="font-size: 12px;" data-i18n="edit_label_subject">Предмет:</label>
               <select id="edit-meeting-subject" class="select-control" style="width: 100%;"></select>
             </div>
             <div>
-              <label class="form-label" style="font-size: 12px;">Клас:</label>
+              <label class="form-label" style="font-size: 12px;" data-i18n="edit_label_class">Клас:</label>
               <select id="edit-meeting-class" class="select-control" style="width: 100%;"></select>
             </div>
           </div>
           <div style="margin-bottom: 12px;">
-            <label class="form-label" style="font-size: 12px;">Тема уроку:</label>
-            <input type="text" id="edit-meeting-title" class="form-input" style="width: 100%; padding: 8px 12px;" placeholder="Тема уроку...">
+            <label class="form-label" style="font-size: 12px;" data-i18n="edit_label_title">Тема уроку:</label>
+            <input type="text" id="edit-meeting-title" class="form-input" style="width: 100%; padding: 8px 12px;" data-i18n-placeholder="edit_placeholder_title" placeholder="Тема уроку...">
           </div>
           <div style="margin-bottom: 12px;">
-            <label class="form-label" style="font-size: 12px;">Нотатки / Домашнє завдання:</label>
-            <input type="text" id="edit-meeting-notes" class="form-input" style="width: 100%; padding: 8px 12px;" placeholder="Д/З або коментар...">
+            <label class="form-label" style="font-size: 12px;" data-i18n="edit_label_notes">Нотатки / Домашнє завдання:</label>
+            <input type="text" id="edit-meeting-notes" class="form-input" style="width: 100%; padding: 8px 12px;" data-i18n-placeholder="edit_placeholder_notes" placeholder="Д/З або коментар...">
           </div>
           <div style="display: flex; gap: 8px; justify-content: flex-end;">
-            <button id="btn-cancel-edit" class="btn btn-sm btn-secondary">Скасувати</button>
-            <button id="btn-save-edit" class="btn btn-sm btn-primary">💾 Зберегти зміни</button>
+            <button id="btn-cancel-edit" class="btn btn-sm btn-secondary" data-i18n="btn_cancel">Скасувати</button>
+            <button id="btn-save-edit" class="btn btn-sm btn-primary" data-i18n="btn_save_changes">💾 Зберегти зміни</button>
           </div>
         </div>
 
         <div class="modal-toolbar">
           <div class="search-box small">
-            <input type="text" id="modal-participant-search" placeholder="Пошук учня за іменем...">
+            <input type="text" id="modal-participant-search" data-i18n-placeholder="modal_search_student" placeholder="Пошук учня за іменем...">
           </div>
           <div class="modal-actions">
-            <button id="btn-toggle-edit" class="btn btn-sm btn-secondary" title="Змінити предмет, клас, тему або нотатки">
+            <button id="btn-toggle-edit" class="btn btn-sm btn-secondary" data-i18n="btn_edit" data-i18n-title="btn_edit_title" title="Змінити предмет, клас, тему або нотатки">
               ✏️ Редагувати
             </button>
-            <button id="btn-export-png" class="btn btn-sm btn-secondary" title="Завантажити графічну картку результатів заняття">
+            <button id="btn-export-png" class="btn btn-sm btn-secondary" data-i18n="btn_png_card" data-i18n-title="card_btn_png_title" title="Завантажити графічну картку результатів заняття">
               📷 Картка (PNG)
             </button>
-            <button id="btn-copy-png" class="btn btn-sm btn-secondary" title="Скопіювати PNG-картку в буфер обміну (Ctrl+V)">
+            <button id="btn-copy-png" class="btn btn-sm btn-secondary" data-i18n="btn_copy_png" title="Copy PNG (Ctrl+V)">
               📋 Копіювати PNG
             </button>
-            <button id="btn-export-csv" class="btn btn-sm btn-primary">
+            <button id="btn-export-csv" class="btn btn-sm btn-primary" data-i18n="btn_export_csv">
               📥 Експорт у Excel (CSV)
             </button>
-            <button id="btn-print-report" class="btn btn-sm btn-secondary">
+            <button id="btn-print-report" class="btn btn-sm btn-secondary" data-i18n="btn_print">
               🖨️ Друк / PDF
             </button>
           </div>
@@ -459,12 +436,12 @@
             <thead>
               <tr>
                 <th>№</th>
-                <th>Ім'я учасника / Учня</th>
-                <th>Перший вхід</th>
-                <th>Останній вихід</th>
-                <th>Час на уроці</th>
-                <th>Присутність</th>
-                <th>Статус</th>
+                <th data-i18n="th_student_name">Ім'я учасника / Учня</th>
+                <th data-i18n="th_first_join">Перший вхід</th>
+                <th data-i18n="th_last_leave">Останній вихід</th>
+                <th data-i18n="th_duration">Час на уроці</th>
+                <th data-i18n="th_attendance">Присутність</th>
+                <th data-i18n="th_status">Статус</th>
               </tr>
             </thead>
             <tbody id="modal-table-body"></tbody>
@@ -472,13 +449,14 @@
         </div>
 
         <div id="modal-notes-section" class="notes-box" style="display: none;">
-          <h4>📝 Нотатки до уроку:</h4>
+          <h4 data-i18n="modal_notes_heading">📝 Нотатки до уроку:</h4>
           <p id="modal-notes-text"></p>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="storage.js"></script>
   <script src="card-generator.js"></script>
   <script src="dashboard.js"></script>

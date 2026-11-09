@@ -27,6 +27,23 @@ const MeetStorage = (() => {
     'Робоча нарада'
   ];
 
+  const DEFAULT_PRESETS_EN = [
+    'Computer Science',
+    'Mathematics',
+    'Algebra',
+    'Geometry',
+    'Physics',
+    'Ukrainian Language',
+    'English Language',
+    'History',
+    'Biology',
+    'Chemistry',
+    'Geography',
+    'Parent-Teacher Meeting',
+    'Homeroom',
+    'Team Standup'
+  ];
+
   const DEFAULT_CLASSES = [
     '1 клас',
     '2 клас',
@@ -40,6 +57,34 @@ const MeetStorage = (() => {
     '10 клас',
     '11 клас'
   ];
+
+  const DEFAULT_CLASSES_EN = [
+    'Grade 1',
+    'Grade 2',
+    'Grade 3',
+    'Grade 4',
+    'Grade 5',
+    'Grade 6',
+    'Grade 7',
+    'Grade 8',
+    'Grade 9',
+    'Grade 10',
+    'Grade 11'
+  ];
+
+  function getDefaultPresetsForCurrentLang() {
+    if (typeof MeetI18n !== 'undefined' && MeetI18n.getLang() === 'en') {
+      return DEFAULT_PRESETS_EN;
+    }
+    return DEFAULT_PRESETS;
+  }
+
+  function getDefaultClassesForCurrentLang() {
+    if (typeof MeetI18n !== 'undefined' && MeetI18n.getLang() === 'en') {
+      return DEFAULT_CLASSES_EN;
+    }
+    return DEFAULT_CLASSES;
+  }
 
   // --- Пресети предметів ---
   async function getPresets() {
@@ -359,7 +404,11 @@ const MeetStorage = (() => {
     sanitizeParticipantName,
     cleanParticipantsMap,
     DEFAULT_PRESETS,
-    DEFAULT_CLASSES
+    DEFAULT_PRESETS_EN,
+    DEFAULT_CLASSES,
+    DEFAULT_CLASSES_EN,
+    getDefaultPresetsForCurrentLang,
+    getDefaultClassesForCurrentLang
   };
 })();
 

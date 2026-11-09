@@ -1,89 +1,112 @@
-# 🎓 Meet Attendance & Lesson Tracker
+# 🎓 Google Meet Attendance & Lesson Tracker
 
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-2563eb?style=flat-square&logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![100% Local Storage](https://img.shields.io/badge/Storage-100%25_Local-10b981?style=flat-square)](manifest.json)
+[![Localization](https://img.shields.io/badge/i18n-EN_%7C_UA-8b5cf6?style=flat-square)](i18n.js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square)](LICENSE)
 
-Автономне розширення для браузерів на базі Chromium (**Google Chrome**, **Opera GX**, **Microsoft Edge**, **Brave**), створене для вчителів, викладачів та організаторів онлайн-зустрічей у **Google Meet**.
+A privacy-first, 100% local browser extension for Chromium-based browsers (**Google Chrome**, **Opera GX**, **Microsoft Edge**, **Brave**) built for teachers, educators, and team leads hosting sessions in **Google Meet**.
 
-Розширення автоматично фіксує присутність учнів у реальному часі, веде локальний журнал занять у розрізі **предметів (шаблонів)**, **класів (1–11)** та **індивідуального досьє кожного учня**, а також генерує стильні **PNG-картки звіту** в один клік.
+It automatically tracks participant attendance in real time, organizes session logs by **Subjects**, **School Grades (1–11)**, and **Individual Student Dossiers**, supports instant **English (`EN`) / Ukrainian (`UA`)** UI localization, and generates high-resolution **PNG summary cards** and **Excel/CSV reports** with a single click.
 
----
-
-## ✨ Основні можливості
-
-- 🔒 **100% Приватність (Zero-Cloud):** Усі дані зберігаються виключно на локальному диску вашого комп'ютера (`chrome.storage.local` з дозволом `unlimitedStorage`). Жодних сторонніх серверів, реєстрацій чи передачі персональних даних учнів у мережу.
-- 🎯 **Розумне розпізнавання активного уроку:** Запис починається **суворо з моменту входу в саму кімнату зустрічі** (екран попереднього налаштування камери та мікрофона «Приєднатися зараз» автоматично ігнорується).
-- 🧹 **Інтелектуальне очищення імен DOM:** Автоматичне видалення системних іконок Google Material Symbols (`devices`, `mic_off`, `more_vert`, `keep`) та склеєних дублікатів імен із карток Google Meet, а також автоматичне об'єднання сесій при перепідключенні учня.
-- 🖥 **Незалежна робота у фоні:** Відстеження продовжується навіть під час перемикання на інші вкладки браузера або демонстрації презентацій/інших програм.
-- 🏷 **Підсумкове вікно після завершення уроку:**
-  - Вибір предмета із заготовок (*Інформатика, Математика, Українська мова* тощо) або вказання власного предмета.
-  - Вибір класу з **1-го по 11-й клас** або довільного підгрупового маркування (*8-А, 10-Б*).
-  - Додавання теми уроку та нотаток (домашнє завдання, зауваження).
-- 📸 **Швидкий експорт PNG-картки (1200×700 Retina):**
-  - Завантаження готового графічного звіту у форматі `.png` або миттєве **копіювання в буфер обміну** (`Ctrl+V` у Viber, Telegram чи шкільний чат) одразу після уроку чи з журналу.
-- 📊 **Аналітичний кабінет у 4 режимах (`dashboard.html`):**
-  1. 📋 **Всі заняття** — повний хронологічний журнал із фільтрами за предметом, класом, пошуком за темою/учнем та редагуванням збережених записів.
-  2. 📚 **За предметами** — зведена статистика по кожній дисципліні, розподіл по класах та історія уроків.
-  3. 🏫 **За класами (1–11)** — аналітика відвідуваності по кожному класу та список предметів, які викладаються.
-  4. 👤 **За учнями** — індивідуальне досьє кожного учня (відсоток присутності, середній час, історія всіх відвіданих уроків та персональний CSV-табель).
-- 💾 **Експорт та резервне копіювання:**
-  - Експорт у **Excel / CSV** (з підтримкою кирилиці `UTF-8 BOM`).
-  - Друк або збереження у **PDF**.
-  - Повний **JSON-бекап** бази даних та імпорт на іншому комп'ютері.
+> 🇺🇦 **[Короткий опис українською мовою доступний внизу сторінки ↓](#-короткий-опис-українською)**
 
 ---
 
-## 🗂 Структура проєкту
+## ✨ Key Features
+
+- 🔒 **100% Local & Private (Zero-Cloud):** All attendance records are stored strictly on your computer (`chrome.storage.local` with `unlimitedStorage`). No external servers, no accounts, and zero third-party data sharing.
+- 🌐 **Bilingual Interface (`EN` / `UA`):** Instant language switching between **English** and **Ukrainian** across the Dashboard, Toolbar Popup, Google Meet HUD, Post-Meeting Modal, and exported PNG/CSV reports.
+- 🎯 **Smart Active-Call Detection:** Tracking starts **strictly when you enter the active meeting room** with students (the camera/microphone preview lobby screen is automatically ignored).
+- 🧹 **DOM Name Sanitizer & Session Merging:** Automatically strips Google Material Symbols icon ligatures (`devices`, `mic_off`, `more_vert`, `keep`) and duplicate accessibility labels from Google Meet tiles, and merges multiple reconnect sessions per student.
+- 🖥️ **Background Tab Resilience:** Continues tracking even when you switch browser tabs or present slides in other applications.
+- 🏷️ **Post-Meeting Classification Modal:**
+  - Select a **Subject** from customizable presets or add a new subject on the fly.
+  - Select a **Grade (Grades 1–11)** or custom group (e.g., *8-A*).
+  - Add a **Lesson Topic** and **Teacher's Quick Note / Homework**.
+- 📸 **Instant Visual PNG Card Export (1200×700 Retina):**
+  - Download a clean summary card as `.png` or **copy it directly to your clipboard (`Ctrl+V`)** to paste into Telegram, Viber, Slack, or Google Classroom.
+- 📊 **4-View Local Analytics Dashboard (`dashboard.html`):**
+  1. 📋 **All Sessions** — Full chronological attendance log with search, subject/grade filters, and inline metadata editing.
+  2. 📚 **By Subject** — Cumulative metrics and session history per discipline.
+  3. 🏫 **By Grade (1–11)** — Attendance breakdown for any specific class across all subjects.
+  4. 👤 **By Student** — Individual student dossier (attendance rate, total time, arrival/departure timestamps, and individual CSV report card export).
+- 💾 **Data Export & Backup:**
+  - Export to **Excel / CSV** (`UTF-8 BOM` encoded).
+  - Print-ready layout / **Save as PDF**.
+  - Full **JSON Database Backup & Restore**.
+
+---
+
+## 🗂️ Project Structure
 
 ```text
-chrome_meet_list_plugin/
-├── manifest.json        # Конфігурація розширення (Manifest V3)
-├── storage.js           # Локальне сховище (chrome.storage.local) та санітайзер імен
-├── background.js        # Фоновий Service Worker (ініціалізація шаблонів, маршрутизація вкладок)
-├── content.js           # Скрипт відстеження Google Meet, HUD-індикатор та модальне вікно
-├── content.css          # Стилі HUD-віджета та підсумкового вікна в Google Meet
-├── card-generator.js    # Генератор графічних PNG-карток через HTML5 Canvas API
-├── dashboard.html       # Головна сторінка журналу та аналітики
-├── dashboard.css        # Стилізація аналітичної панелі (Dark UI + Print CSS)
-├── dashboard.js         # Логіка фільтрації, 4 аналітичних режимів, редагування та експорту
-├── popup.html           # Спливаюче меню іконки розширення в панелі браузера
-├── popup.css            # Стилі спливаючого меню
-├── popup.js             # Логіка швидкого перегляду статусу та останніх занять
-└── icons/               # Іконки розширення (16x16, 32x32, 48x48, 128x128)
+chrome-meet-list-plugin/
+├── manifest.json        # Extension configuration (Manifest V3)
+├── i18n.js              # Bilingual localization engine & dictionary (EN / UA)
+├── storage.js           # Local storage module (chrome.storage.local) & name sanitizer
+├── background.js        # Service Worker (preset initialization & tab routing)
+├── content.js           # Google Meet DOM tracker, draggable HUD & post-meeting modal
+├── content.css          # Styles for in-call HUD widget and post-meeting modal
+├── card-generator.js    # HTML5 Canvas Retina PNG summary card generator
+├── dashboard.html       # Standalone analytics dashboard & attendance log
+├── dashboard.css        # Dashboard styles (Dark UI + Print CSS)
+├── dashboard.js         # Dashboard logic, 4 analytical views, inline editor & exports
+├── popup.html           # Toolbar popup layout
+├── popup.css            # Toolbar popup styles
+├── popup.js             # Quick status & recent sessions viewer
+└── icons/               # Extension icons (16x16, 32x32, 48x48, 128x128)
 ```
 
 ---
 
-## 🚀 Встановлення (Google Chrome / Opera GX / Microsoft Edge)
+## 🚀 Installation (Chrome / Opera GX / Edge / Brave)
 
-1. Завантажте або склонуйте цей репозиторій на комп'ютер:
+1. Clone or download this repository to your computer:
    ```bash
    git clone https://github.com/dark1604/chrome-meet-list-plugin.git
    ```
-2. Відкрийте сторінку керування розширеннями у вашому браузері:
+2. Open the Extensions management page in your browser:
    - **Google Chrome:** `chrome://extensions/`
    - **Opera / Opera GX:** `opera://extensions/`
    - **Microsoft Edge:** `edge://extensions/`
-3. Увімкніть перемикач **«Режим розробника» (Developer mode)** у правому верхньому кутку.
-4. Натисніть кнопку **«Завантажити розпаковане розширення» (Load unpacked)**.
-5. Оберіть папку проєкту `chrome_meet_list_plugin`.
-6. Закріпіть іконку **Meet Tracker** на панелі інструментів браузера (іконка пазла 🧩 → шпилька 📌).
+3. Enable **Developer mode** in the top-right corner.
+4. Click **Load unpacked** (Завантажити розпаковане розширення).
+5. Select the `chrome-meet-list-plugin` folder.
+6. Pin **Meet Tracker** to your browser toolbar (puzzle icon 🧩 → pin 📌).
 
 ---
 
-## 💡 Як користуватися
+## 💡 How to Use
 
-1. **Початок уроку:** Перейдіть у зустріч на `https://meet.google.com/...`. Поки ви налаштовуєте камеру чи мікрофон у лобі, плагін чекає. Щойно ви натискаєте **«Приєднатися зараз»** і входите на урок, у правому верхньому куті з'являється компактний **HUD-віджет** із таймером та лічильником учнів.
-2. **Під час уроку:** Плагін автоматично фіксує кожного учасника. Для гарантованого збору всіх учнів (особливо якщо в класі понад 15–20 дітей і не всі плитки вміщуються на екрані) рекомендується хоча б раз відкрити бічну панель **«Люди» (Учасники)** у Google Meet.
-3. **Завершення уроку:** Коли ви натискаєте червону кнопку завершення дзвінка, з'явиться вікно підсумку:
-   - Оберіть **Предмет** та **Клас (1–11)**;
-   - За потреби завантажте або **скопіюйте PNG-картку звіту** в буфер обміну;
-   - Натисніть **«Зберегти в журнал»**.
-4. **Перегляд аналітики:** Натисніть на іконку розширення у браузері → **«Відкрити повний журнал занять»**.
+1. **Join a Call:** Open a meeting on `https://meet.google.com/...`. While you configure your camera and microphone in the lobby, the extension waits. As soon as you click **Join now** and enter the active call, a draggable **HUD widget** appears in the top-right corner with a live timer and student counter.
+2. **During the Lesson:** Participants are recorded automatically. For large classes (15+ students where not all video tiles fit on screen), click **📋 People** on the HUD widget once to open the participants side panel and capture everyone.
+3. **End of Lesson:** When you leave the call, the **Post-Meeting Modal** pops up:
+   - Pick the **Subject** and **Grade (1–11)**;
+   - Optionally download or **copy the PNG summary card** (`Ctrl+V`);
+   - Click **Save to Log** or **Save & Open Report**.
+4. **Switch Language (`UA` / `EN`):** Use the `UA | EN` toggle in the Dashboard sidebar, Toolbar Popup, or Post-Meeting Modal at any time.
 
 ---
 
-## 📄 Ліцензія
+## 🇺🇦 Короткий опис українською
 
-Проєкт поширюється за ліцензією [MIT License](LICENSE).
+**Google Meet Attendance & Lesson Tracker** — це повністю локальне розширення для браузерів **Google Chrome**, **Opera GX** та **Microsoft Edge**, створене для автоматичного обліку відвідуваності уроків і зустрічей у Google Meet.
+
+### Головні переваги:
+- **100% локальне збереження:** Усі дані зберігаються виключно на вашому комп'ютері (`chrome.storage.local`) без жодних хмарних сервісів.
+- **Двомовний інтерфейс (`UA` / `EN`):** Миттєве перемикання між українською та англійською мовами у журналі, спливаючому меню, вікні завершення уроку та на PNG/CSV-звітах.
+- **Точний старт запису:** Відлік часу та фіксація учнів починаються **суворо після входу в активну кімнату уроку** (екран налаштування камери та мікрофона в лобі ігнорується).
+- **Чисті імена учасників:** Автоматичне очищення імен від системних іконок Google Meet (`devices`, `mic_off` тощо) та склеєних дублікатів.
+- **Швидка PNG-картка та Excel-звіти:** Після завершення уроку плагін пропонує обрати **Предмет**, **Клас (1–11)**, додати тему/ДЗ і в один клік завантажити або скопіювати в буфер обміну (`Ctrl+V`) графічну **PNG-картку підсумків**, або відкрити розширений журнал аналітики (за предметами, класами та кожним учнем окремо).
+
+### Швидке встановлення:
+1. Відкрийте `chrome://extensions/` (або `opera://extensions/`).
+2. Увімкніть **«Режим розробника» (Developer mode)**.
+3. Натисніть **«Завантажити розпаковане розширення» (Load unpacked)** та оберіть папку проєкту.
+
+---
+
+## 📄 License
+
+Distributed under the [MIT License](LICENSE).

@@ -7,6 +7,17 @@
 (() => {
   console.log('[Meet Tracker] Модуль відстеження завантажено на сторінці Meet.');
 
+  if (typeof MeetI18n !== 'undefined' && MeetI18n.init) {
+    MeetI18n.init();
+  }
+
+  function t(key, params = {}) {
+    if (typeof MeetI18n !== 'undefined' && MeetI18n.t) {
+      return MeetI18n.t(key, params);
+    }
+    return key;
+  }
+
   let currentMeetingCode = null;
   let isMeetingActive = false;
   let meetingStartTime = null;
@@ -141,23 +152,23 @@
       hudElement = document.createElement('div');
       hudElement.id = 'gmeet-tracker-hud';
       hudElement.innerHTML = `
-        <div class="gmeet-tracker-indicator" title="Відстеження уроку активне"></div>
+        <div class="gmeet-tracker-indicator" data-i18n-title="hud_indicator_title" title="${escapeHtml(t('hud_indicator_title'))}"></div>
         <div class="gmeet-tracker-info">
-          <span class="gmeet-tracker-stat" id="gmeet-hud-participants" title="Зафіксовано учнів">
+          <span class="gmeet-tracker-stat" id="gmeet-hud-participants" data-i18n-title="hud_participants_title" title="${escapeHtml(t('hud_participants_title'))}">
             👥 <b>0</b>
           </span>
-          <span class="gmeet-tracker-stat" id="gmeet-hud-timer" title="Час від моменту вашого входу">
+          <span class="gmeet-tracker-stat" id="gmeet-hud-timer" data-i18n-title="hud_timer_title" title="${escapeHtml(t('hud_timer_title'))}">
             ⏱️ <b>00:00</b>
           </span>
         </div>
-        <button class="gmeet-tracker-btn" id="gmeet-hud-sync" title="Відкрити бічний список учасників">
-          📋 Список
+        <button class="gmeet-tracker-btn" id="gmeet-hud-sync" data-i18n="hud_btn_sync" data-i18n-title="hud_btn_sync_title" title="${escapeHtml(t('hud_btn_sync_title'))}">
+          ${escapeHtml(t('hud_btn_sync'))}
         </button>
-        <button class="gmeet-tracker-btn gmeet-tracker-btn-primary" id="gmeet-hud-finish" title="Завершити урок та зберегти звіт">
-          ⏹️ Завершити
+        <button class="gmeet-tracker-btn gmeet-tracker-btn-primary" id="gmeet-hud-finish" data-i18n="hud_btn_finish" data-i18n-title="hud_btn_finish_title" title="${escapeHtml(t('hud_btn_finish_title'))}">
+          ${escapeHtml(t('hud_btn_finish'))}
         </button>
-        <button class="gmeet-tracker-btn" id="gmeet-hud-dash" title="Відкрити журнал занять">
-          📊 Журнал
+        <button class="gmeet-tracker-btn" id="gmeet-hud-dash" data-i18n="hud_btn_dash" data-i18n-title="hud_btn_dash_title" title="${escapeHtml(t('hud_btn_dash_title'))}">
+          ${escapeHtml(t('hud_btn_dash'))}
         </button>
       `;
       document.body.appendChild(hudElement);
@@ -431,6 +442,10 @@
     if (postModalShown) return;
     postModalShown = true;
 
+    if (typeof MeetI18n !== 'undefined' && MeetI18n.init) {
+      await MeetI18n.init();
+    }
+
     const duration = meetingStartTime ? Math.round((Date.now() - meetingStartTime) / 1000) : 0;
     const participantsList = Object.values(participants);
 
@@ -444,99 +459,119 @@
       classes = ['1 клас', '2 клас', '3 клас', '4 клас', '5 клас', '6 клас', '7 клас', '8 клас', '9 клас', '10 клас', '11 клас'];
     }
 
+    const activeLang = (typeof MeetI18n !== 'undefined' && MeetI18n.getLang) ? MeetI18n.getLang() : 'uk';
     const modalOverlay = document.createElement('div');
     modalOverlay.id = 'gmeet-tracker-modal-overlay';
 
     modalOverlay.innerHTML = `
       <div class="gmeet-modal-card">
         <div class="gmeet-modal-header">
-          <div class="gmeet-modal-icon">📚</div>
-          <div>
-            <h2 class="gmeet-modal-title">Урок завершено!</h2>
-            <p class="gmeet-modal-subtitle">Код: <b>${escapeHtml(currentMeetingCode)}</b> • Збережіть деталі в локальний журнал</p>
+          <div class="gmeet-modal-header-left">
+            <div class="gmeet-modal-icon">📚</div>
+            <div>
+              <h2 class="gmeet-modal-title" data-i18n="post_modal_title">${escapeHtml(t('post_modal_title'))}</h2>
+              <p class="gmeet-modal-subtitle" id="gmeet-modal-subtitle-el">${t('post_modal_subtitle', { code: escapeHtml(currentMeetingCode) })}</p>
+            </div>
+          </div>
+          <div class="gmeet-lang-switcher">
+            <button type="button" class="gmeet-lang-btn ${activeLang === 'uk' ? 'active' : ''}" data-lang-switch="uk">UA</button>
+            <button type="button" class="gmeet-lang-btn ${activeLang === 'en' ? 'active' : ''}" data-lang-switch="en">EN</button>
           </div>
         </div>
 
         <div class="gmeet-modal-summary">
           <div class="gmeet-summary-item">
             <div class="gmeet-summary-num">${participantsList.length}</div>
-            <div class="gmeet-summary-label">Приєднаних дітей</div>
+            <div class="gmeet-summary-label" data-i18n="post_summary_students">${escapeHtml(t('post_summary_students'))}</div>
           </div>
           <div class="gmeet-summary-item">
             <div class="gmeet-summary-num">${formatSeconds(duration)}</div>
-            <div class="gmeet-summary-label">Час спілкування</div>
+            <div class="gmeet-summary-label" data-i18n="post_summary_duration">${escapeHtml(t('post_summary_duration'))}</div>
           </div>
           <div class="gmeet-summary-item">
             <div class="gmeet-summary-num">100%</div>
-            <div class="gmeet-summary-label">Локально на ПК</div>
+            <div class="gmeet-summary-label" data-i18n="post_summary_local">${escapeHtml(t('post_summary_local'))}</div>
           </div>
         </div>
 
         <div class="gmeet-form-row">
           <div class="gmeet-form-group">
-            <label class="gmeet-form-label" for="gmeet-select-subject">Предмет / Заготовка:</label>
+            <label class="gmeet-form-label" for="gmeet-select-subject" data-i18n="post_label_subject">${escapeHtml(t('post_label_subject'))}</label>
             <select id="gmeet-select-subject" class="gmeet-select">
               ${presets.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')}
-              <option value="__custom__">➕ Вказати іншу назву...</option>
+              <option value="__custom__" data-i18n="post_opt_custom_subject">${escapeHtml(t('post_opt_custom_subject'))}</option>
             </select>
           </div>
 
           <div class="gmeet-form-group">
-            <label class="gmeet-form-label" for="gmeet-select-class">Клас (1–11 класи):</label>
+            <label class="gmeet-form-label" for="gmeet-select-class" data-i18n="post_label_class">${escapeHtml(t('post_label_class'))}</label>
             <select id="gmeet-select-class" class="gmeet-select">
-              <option value="">(Без класу / Загальна)</option>
+              <option value="" data-i18n="no_class">${escapeHtml(t('no_class'))}</option>
               ${classes.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
-              <option value="__custom_class__">➕ Свій клас / літера (напр. 8-А)...</option>
+              <option value="__custom_class__" data-i18n="post_opt_custom_class">${escapeHtml(t('post_opt_custom_class'))}</option>
             </select>
           </div>
         </div>
 
         <div class="gmeet-form-row">
           <div class="gmeet-form-group" id="gmeet-custom-subject-group" style="display: none;">
-            <label class="gmeet-form-label" for="gmeet-input-custom-subject">Кастомна назва предмета:</label>
-            <input type="text" id="gmeet-input-custom-subject" class="gmeet-input" placeholder="Наприклад: Підготовка до олімпіади" />
+            <label class="gmeet-form-label" for="gmeet-input-custom-subject" data-i18n="post_label_custom_subject">${escapeHtml(t('post_label_custom_subject'))}</label>
+            <input type="text" id="gmeet-input-custom-subject" class="gmeet-input" data-i18n-placeholder="post_placeholder_custom_subject" placeholder="${escapeHtml(t('post_placeholder_custom_subject'))}" />
           </div>
 
           <div class="gmeet-form-group" id="gmeet-custom-class-group" style="display: none;">
-            <label class="gmeet-form-label" for="gmeet-input-custom-class">Кастомний клас / літера:</label>
-            <input type="text" id="gmeet-input-custom-class" class="gmeet-input" placeholder="Наприклад: 8-Б клас або Факультатив" />
+            <label class="gmeet-form-label" for="gmeet-input-custom-class" data-i18n="post_label_custom_class">${escapeHtml(t('post_label_custom_class'))}</label>
+            <input type="text" id="gmeet-input-custom-class" class="gmeet-input" data-i18n-placeholder="post_placeholder_custom_class" placeholder="${escapeHtml(t('post_placeholder_custom_class'))}" />
           </div>
         </div>
 
         <div class="gmeet-form-group">
-          <label class="gmeet-form-label" for="gmeet-input-title">Тема уроку (опціонально):</label>
-          <input type="text" id="gmeet-input-title" class="gmeet-input" placeholder="Наприклад: Квадратні рівняння, Розділ 3" />
+          <label class="gmeet-form-label" for="gmeet-input-title" data-i18n="post_label_topic">${escapeHtml(t('post_label_topic'))}</label>
+          <input type="text" id="gmeet-input-title" class="gmeet-input" data-i18n-placeholder="post_placeholder_topic" placeholder="${escapeHtml(t('post_placeholder_topic'))}" />
         </div>
 
         <div class="gmeet-form-group">
-          <label class="gmeet-form-label" for="gmeet-input-notes">Швидка нотатка / ДЗ (буде на зображенні та в журналі):</label>
-          <textarea id="gmeet-input-notes" class="gmeet-textarea" placeholder="Д/З параграф 12, виконати вправи 1-4..."></textarea>
+          <label class="gmeet-form-label" for="gmeet-input-notes" data-i18n="post_label_notes">${escapeHtml(t('post_label_notes'))}</label>
+          <textarea id="gmeet-input-notes" class="gmeet-textarea" data-i18n-placeholder="post_placeholder_notes" placeholder="${escapeHtml(t('post_placeholder_notes'))}"></textarea>
         </div>
 
         <!-- Швидкий експорт прямокутної PNG-картки -->
         <div class="gmeet-png-export-section">
           <div class="gmeet-png-title">
-            <span>📷 Швидкий експорт результатів уроку (PNG-картка):</span>
+            <span data-i18n="post_png_title">${escapeHtml(t('post_png_title'))}</span>
           </div>
           <div class="gmeet-png-buttons">
-            <button type="button" id="gmeet-btn-download-png" class="gmeet-btn-action">
-              📥 Завантажити PNG
+            <button type="button" id="gmeet-btn-download-png" class="gmeet-btn-action" data-i18n="post_btn_download_png">
+              ${escapeHtml(t('post_btn_download_png'))}
             </button>
-            <button type="button" id="gmeet-btn-copy-png" class="gmeet-btn-action">
-              📋 Скопіювати картинку (Ctrl+V)
+            <button type="button" id="gmeet-btn-copy-png" class="gmeet-btn-action" data-i18n="post_btn_copy_png">
+              ${escapeHtml(t('post_btn_copy_png'))}
             </button>
           </div>
           <div id="gmeet-png-feedback" class="gmeet-png-feedback" style="display: none;"></div>
         </div>
 
         <div class="gmeet-modal-actions">
-          <button id="gmeet-btn-save-close" class="gmeet-btn-cancel">Зберегти в журнал</button>
-          <button id="gmeet-btn-save-open" class="gmeet-btn-submit">Зберегти та відкрити звіт</button>
+          <button id="gmeet-btn-save-close" class="gmeet-btn-cancel" data-i18n="post_btn_save_close">${escapeHtml(t('post_btn_save_close'))}</button>
+          <button id="gmeet-btn-save-open" class="gmeet-btn-submit" data-i18n="post_btn_save_open">${escapeHtml(t('post_btn_save_open'))}</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(modalOverlay);
+
+    // Language switch inside post-meeting modal
+    modalOverlay.querySelectorAll('[data-lang-switch]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const lang = btn.getAttribute('data-lang-switch');
+        if (typeof MeetI18n !== 'undefined') {
+          await MeetI18n.setLang(lang);
+          MeetI18n.applyToDOM(modalOverlay);
+          const subEl = document.getElementById('gmeet-modal-subtitle-el');
+          if (subEl) subEl.innerHTML = t('post_modal_subtitle', { code: escapeHtml(currentMeetingCode) });
+        }
+      });
+    });
 
     const selectEl = document.getElementById('gmeet-select-subject');
     const customGroup = document.getElementById('gmeet-custom-subject-group');
@@ -617,7 +652,7 @@
         MeetingCardGenerator.downloadPNG(currentMeeting);
         if (pngFeedback) {
           pngFeedback.style.display = 'block';
-          pngFeedback.textContent = '✅ PNG-картку збережено на комп\'ютер!';
+          pngFeedback.textContent = t('post_feedback_saved');
           pngFeedback.style.color = '#34d399';
         }
       }
@@ -633,14 +668,14 @@
           await MeetingCardGenerator.copyToClipboard(currentMeeting);
           if (pngFeedback) {
             pngFeedback.style.display = 'block';
-            pngFeedback.textContent = '✅ Скопійовано! Вставте картинку через Ctrl+V у Telegram чи Viber.';
+            pngFeedback.textContent = t('post_feedback_copied');
             pngFeedback.style.color = '#38bdf8';
           }
         } catch (e) {
           MeetingCardGenerator.downloadPNG(currentMeeting);
           if (pngFeedback) {
             pngFeedback.style.display = 'block';
-            pngFeedback.textContent = '📥 Файл завантажено на комп\'ютер!';
+            pngFeedback.textContent = t('post_feedback_downloaded');
             pngFeedback.style.color = '#fbbf24';
           }
         }
@@ -692,6 +727,21 @@
       autoSaveSession(true);
     }
   });
+
+  // Оновлювати HUD при перемиканні мови у фоні
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'local' && changes.meet_language && typeof MeetI18n !== 'undefined') {
+        if (hudElement) MeetI18n.applyToDOM(hudElement);
+        const modal = document.getElementById('gmeet-tracker-modal-overlay');
+        if (modal) {
+          MeetI18n.applyToDOM(modal);
+          const subEl = document.getElementById('gmeet-modal-subtitle-el');
+          if (subEl) subEl.innerHTML = t('post_modal_subtitle', { code: escapeHtml(currentMeetingCode) });
+        }
+      }
+    });
+  }
 
   // Моніторинг статусу кожну 1 секунду
   setInterval(checkPageStatus, 1000);

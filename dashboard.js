@@ -4,6 +4,16 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await MeetI18n.init();
+
+  function t(key, params = {}) {
+    return MeetI18n.t(key, params);
+  }
+
+  function getLocale() {
+    return MeetI18n.getLocaleCode();
+  }
+
   let allMeetings = [];
   let currentActiveMeeting = null;
   let allStudentsSet = new Set();
@@ -107,23 +117,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // --- Перемикач мови (UA / EN) ---
+  document.querySelectorAll('[data-lang-switch]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const lang = btn.getAttribute('data-lang-switch');
+      await MeetI18n.setLang(lang);
+      MeetI18n.applyToDOM(document);
+      await loadData();
+      if (detailModal.style.display === 'flex' && currentActiveMeeting) {
+        refreshModalHeader();
+        renderParticipantTable();
+      }
+    });
+  });
+
   // --- Форматування ---
   function formatDuration(seconds) {
-    if (!seconds || seconds <= 0) return '0 хв';
+    if (!seconds || seconds <= 0) return `0 ${t('unit_min')}`;
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     if (mins >= 60) {
       const hours = Math.floor(mins / 60);
       const remMins = mins % 60;
-      return `${hours} год ${remMins} хв`;
+      return `${hours} ${t('unit_hour')} ${remMins} ${t('unit_min')}`;
     }
-    return `${mins} хв ${secs} с`;
+    return `${mins} ${t('unit_min')} ${secs} ${t('unit_s')}`;
   }
 
   function formatDateTime(isoString) {
     if (!isoString) return '—';
     const date = new Date(isoString);
-    return date.toLocaleString('uk-UA', {
+    return date.toLocaleString(getLocale(), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -135,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function formatTimeOnly(isoString) {
     if (!isoString) return '—';
     const date = new Date(isoString);
-    return date.toLocaleTimeString('uk-UA', {
+    return date.toLocaleTimeString(getLocale(), {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
@@ -144,6 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Головне завантаження даних ---
   async function loadData() {
+    MeetI18n.applyToDOM(document);
     allMeetings = await MeetStorage.getAllMeetings();
 
     // Збираємо список усіх унікальних учнів
@@ -211,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentAnaStu = selectAnalyticsStudent.value;
 
     // 1. Фільтр предметів у головній таблиці
-    filterSubject.innerHTML = '<option value="">Всі предмети</option>';
+    filterSubject.innerHTML = `<option value="">${escapeHtml(t('filter_all_subjects'))}</option>`;
     allSubjects.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p;
@@ -221,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // 2. Фільтр класів у головній таблиці
-    filterClass.innerHTML = '<option value="">Всі класи</option>';
+    filterClass.innerHTML = `<option value="">${escapeHtml(t('filter_all_classes'))}</option>`;
     allClasses.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c;
@@ -251,8 +276,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // 5. Випадаючий список для вкладки "За учнями"
-    selectAnalyticsStudent.innerHTML = '<option value="">-- Оберіть учня зі списку (' + allStudentsSet.size + ' учнів) --</option>';
-    const sortedStudents = Array.from(allStudentsSet).sort((a, b) => a.localeCompare(b, 'uk'));
+    selectAnalyticsStudent.innerHTML = `<option value="">${escapeHtml(t('select_student_placeholder', { count: allStudentsSet.size }))}</option>`;
+    const sortedStudents = Array.from(allStudentsSet).sort((a, b) => a.localeCompare(b, getLocale()));
     sortedStudents.forEach(st => {
       const opt = document.createElement('option');
       opt.value = st;
@@ -313,7 +338,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (meetingsArray.length === 0) {
       containerElement.innerHTML = `
         <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-md);">
-          Занять у цій категорії ще не зафіксовано.
+          ${escapeHtml(t('category_empty'))}
         </div>
       `;
       return;
@@ -323,13 +348,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const card = document.createElement('div');
       card.className = 'meeting-card';
 
-      const title = m.customTitle || m.subject || 'Загальна зустріч';
+      const title = m.customTitle || m.subject || t('general_meeting');
       const participantsCount = Object.keys(m.participants || {}).length;
 
       card.innerHTML = `
         <div class="card-top">
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <span class="subject-badge">${escapeHtml(m.subject || 'Загальна')}</span>
+            <span class="subject-badge">${escapeHtml(m.subject || t('general_short'))}</span>
             ${m.schoolClass ? `<span class="class-badge">🏫 ${escapeHtml(m.schoolClass)}</span>` : ''}
           </div>
           <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">${escapeHtml(m.meetingCode)}</span>
@@ -344,25 +369,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="meta-item">
             <span>⏱️</span>
-            <span>Тривалість: <b>${formatDuration(m.durationSeconds)}</b></span>
+            <span>${escapeHtml(t('card_duration'))} <b>${formatDuration(m.durationSeconds)}</b></span>
           </div>
           <div class="meta-item">
             <span>👥</span>
-            <span>Присутніх: <b>${participantsCount}</b> учнів</span>
+            <span>${escapeHtml(t('card_present'))} <b>${participantsCount}</b> ${escapeHtml(t('card_students_suffix'))}</span>
           </div>
         </div>
 
         <div class="card-actions">
           <button class="btn btn-primary btn-sm btn-view-report" style="flex: 1;">
-            📊 Звіт
+            ${escapeHtml(t('card_btn_report'))}
           </button>
-          <button class="btn btn-secondary btn-sm btn-card-png" title="Завантажити графічну PNG-картку уроку">
+          <button class="btn btn-secondary btn-sm btn-card-png" title="${escapeHtml(t('card_btn_png_title'))}">
             📷
           </button>
-          <button class="btn btn-secondary btn-sm btn-quick-export" title="Експорт у Excel (CSV)">
+          <button class="btn btn-secondary btn-sm btn-quick-export" title="${escapeHtml(t('card_btn_csv_title'))}">
             📥
           </button>
-          <button class="btn btn-danger btn-sm btn-delete-meeting" title="Видалити запис">
+          <button class="btn btn-danger btn-sm btn-delete-meeting" title="${escapeHtml(t('card_btn_del_title'))}">
             🗑️
           </button>
         </div>
@@ -376,7 +401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       card.querySelector('.btn-quick-export').addEventListener('click', () => exportMeetingToCSV(m));
       card.querySelector('.btn-delete-meeting').addEventListener('click', async () => {
-        if (confirm(`Видалити запис уроку "${title}" від ${formatDateTime(m.startTime)}?`)) {
+        if (confirm(t('confirm_delete_meeting', { title, date: formatDateTime(m.startTime) }))) {
           await MeetStorage.deleteMeeting(m.id);
           await loadData();
         }
@@ -483,13 +508,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const percent = Math.min(100, Math.round((p.totalSeconds / mDuration) * 100));
 
       let statusClass = 'status-present';
-      let statusText = 'Присутній';
+      let statusText = t('status_present');
       if (percent < 25) {
         statusClass = 'status-short';
-        statusText = 'Короткочасно';
+        statusText = t('status_short');
       } else if (percent < 75) {
         statusClass = 'status-late';
-        statusText = 'Частково';
+        statusText = t('status_partial');
       }
 
       const tr = document.createElement('tr');
@@ -505,14 +530,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span style="font-size: 11px; font-weight: bold;">${percent}%</span>
           </div>
         </td>
-        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        <td><span class="status-badge ${statusClass}">${escapeHtml(statusText)}</span></td>
       `;
       studentHistoryTbody.appendChild(tr);
     });
 
     if (attendedMeetings.length === 0) {
       studentHistoryTbody.innerHTML = `
-        <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 18px;">Цей учень ще не відвідував жодного заняття.</td></tr>
+        <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 18px;">${escapeHtml(t('student_no_lessons'))}</td></tr>
       `;
     }
   }
@@ -524,16 +549,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!studentName) return;
 
     let csvContent = '\uFEFF';
-    csvContent += `Персональний табель відвідуваності учня: "${studentName}"\n`;
-    csvContent += `Згенеровано: ${new Date().toLocaleString('uk-UA')}\n\n`;
-    csvContent += `"Дата";"Предмет";"Клас";"Перший вхід";"Останній вихід";"Час на уроці";"Відсоток";"Статус"\n`;
+    csvContent += `${t('csv_dossier_title')}: "${studentName}"\n`;
+    csvContent += `${t('csv_generated')}: ${new Date().toLocaleString(getLocale())}\n\n`;
+    csvContent += `${t('csv_dossier_headers')}\n`;
 
     allMeetings.forEach(m => {
       if (m.participants && m.participants[studentName]) {
         const p = m.participants[studentName];
         const mDuration = Math.max(1, m.durationSeconds || 1);
         const percent = Math.min(100, Math.round((p.totalSeconds / mDuration) * 100));
-        let status = percent >= 75 ? 'Присутній' : (percent < 25 ? 'Короткочасно' : 'Частково');
+        let status = percent >= 75 ? t('status_present') : (percent < 25 ? t('status_short') : t('status_partial'));
 
         const row = [
           `"${formatDateTime(m.startTime)}"`,
@@ -550,7 +575,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    downloadBlob(blob, `Табель_${studentName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadBlob(blob, `${t('csv_dossier_prefix')}_${studentName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
   });
 
   // --- Детальний звіт зустрічі у модальному вікні ---
@@ -564,7 +589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function refreshModalHeader() {
     if (!currentActiveMeeting) return;
-    modalSubjectBadge.textContent = currentActiveMeeting.subject || 'Загальна';
+    modalSubjectBadge.textContent = currentActiveMeeting.subject || t('general_short');
 
     if (currentActiveMeeting.schoolClass) {
       modalClassBadge.style.display = 'inline-block';
@@ -573,15 +598,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       modalClassBadge.style.display = 'none';
     }
 
-    modalTitle.textContent = currentActiveMeeting.customTitle || currentActiveMeeting.subject || 'Зустріч Google Meet';
+    modalTitle.textContent = currentActiveMeeting.customTitle || currentActiveMeeting.subject || t('general_meeting');
 
     const pCount = Object.keys(currentActiveMeeting.participants || {}).length;
-    modalMeta.innerHTML = `
-      Код: <b>${escapeHtml(currentActiveMeeting.meetingCode)}</b> • 
-      Дата: <b>${formatDateTime(currentActiveMeeting.startTime)}</b> • 
-      Загальний час: <b>${formatDuration(currentActiveMeeting.durationSeconds)}</b> • 
-      Всього учнів: <b>${pCount}</b>
-    `;
+    modalMeta.innerHTML = t('modal_meta_template', {
+      code: escapeHtml(currentActiveMeeting.meetingCode),
+      date: formatDateTime(currentActiveMeeting.startTime),
+      duration: formatDuration(currentActiveMeeting.durationSeconds),
+      count: pCount
+    });
 
     if (currentActiveMeeting.notes) {
       modalNotesSection.style.display = 'block';
@@ -614,7 +639,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       editMeetingSubject.appendChild(opt);
     });
 
-    editMeetingClass.innerHTML = '<option value="">(Без класу)</option>';
+    editMeetingClass.innerHTML = `<option value="">${escapeHtml(t('no_class_short'))}</option>`;
     classesList.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c;
@@ -634,7 +659,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   btnSaveEdit?.addEventListener('click', async () => {
     if (!currentActiveMeeting) return;
-    currentActiveMeeting.subject = editMeetingSubject.value || 'Загальна зустріч';
+    currentActiveMeeting.subject = editMeetingSubject.value || t('general_meeting');
     currentActiveMeeting.schoolClass = editMeetingClass.value || '';
     currentActiveMeeting.customTitle = editMeetingTitle.value.trim();
     currentActiveMeeting.notes = editMeetingNotes.value.trim();
@@ -655,7 +680,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const meetingStartMs = new Date(currentActiveMeeting.startTime).getTime();
     const meetingEndMs = new Date(currentActiveMeeting.endTime || Date.now()).getTime();
 
-    list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'uk'));
+    list.sort((a, b) => (a.name || '').localeCompare(b.name || '', getLocale()));
 
     modalTableBody.innerHTML = '';
 
@@ -667,7 +692,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const attendancePercent = Math.min(100, Math.round((totalSec / meetingDuration) * 100));
 
       let statusClass = 'status-present';
-      let statusText = 'Був увесь час';
+      let statusText = t('status_full');
 
       const firstJoinMs = new Date(p.firstJoined).getTime();
       const lastSeenMs = new Date(p.lastSeen).getTime();
@@ -677,13 +702,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (attendancePercent < 25) {
         statusClass = 'status-short';
-        statusText = 'Короткочасно';
+        statusText = t('status_short');
       } else if (earlyLeaveSeconds > 300) {
         statusClass = 'status-early';
-        statusText = 'Вийшов раніше';
+        statusText = t('status_early');
       } else if (lateSeconds > 300) {
         statusClass = 'status-late';
-        statusText = 'Запізнився';
+        statusText = t('status_late');
       }
 
       let barColor = '#10b981';
@@ -731,7 +756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (modalTableBody.children.length === 0) {
       modalTableBody.innerHTML = `
-        <tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">Учнів не знайдено</td></tr>
+        <tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">${escapeHtml(t('table_no_students'))}</td></tr>
       `;
     }
   }
@@ -741,23 +766,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!meeting) return;
 
     const participants = Object.values(meeting.participants || {});
-    participants.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+    participants.sort((a, b) => a.name.localeCompare(b.name, getLocale()));
     const meetingDuration = Math.max(1, meeting.durationSeconds || 1);
 
     let csvContent = '\uFEFF';
-    csvContent += `Звіт відвідуваності: ${meeting.subject} ${meeting.schoolClass ? `(${meeting.schoolClass})` : ''} - ${meeting.customTitle || ''}\n`;
-    csvContent += `Код зустрічі: ${meeting.meetingCode}\n`;
-    csvContent += `Дата та час: ${formatDateTime(meeting.startTime)}\n`;
-    csvContent += `Загальна тривалість: ${formatDuration(meeting.durationSeconds)}\n`;
-    if (meeting.notes) csvContent += `Нотатки: "${meeting.notes.replace(/"/g, '""')}"\n`;
+    csvContent += `${t('csv_report_title')}: ${meeting.subject} ${meeting.schoolClass ? `(${meeting.schoolClass})` : ''} - ${meeting.customTitle || ''}\n`;
+    csvContent += `${t('csv_meeting_code')}: ${meeting.meetingCode}\n`;
+    csvContent += `${t('csv_date_time')}: ${formatDateTime(meeting.startTime)}\n`;
+    csvContent += `${t('csv_total_duration')}: ${formatDuration(meeting.durationSeconds)}\n`;
+    if (meeting.notes) csvContent += `${t('csv_notes')}: "${meeting.notes.replace(/"/g, '""')}"\n`;
     csvContent += `\n`;
 
-    csvContent += `"№";"Ім'я учня";"Перший вхід";"Останній вихід";"Час на занятті";"Час у секундах";"Відсоток";"Статус"\n`;
+    csvContent += `${t('csv_headers')}\n`;
 
     participants.forEach((p, idx) => {
       const totalSec = p.totalSeconds || 0;
       const percent = Math.min(100, Math.round((totalSec / meetingDuration) * 100));
-      let status = percent >= 75 ? 'Присутній' : (percent < 25 ? 'Короткочасно' : 'Частково');
+      let status = percent >= 75 ? t('status_present') : (percent < 25 ? t('status_short') : t('status_partial'));
 
       const row = [
         idx + 1,
@@ -774,7 +799,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const classPart = meeting.schoolClass ? `_${meeting.schoolClass}` : '';
-    const filename = `Звіт_${meeting.subject}${classPart}_${new Date(meeting.startTime).toISOString().slice(0, 10)}.csv`;
+    const filename = `${t('csv_filename_prefix')}_${meeting.subject}${classPart}_${new Date(meeting.startTime).toISOString().slice(0, 10)}.csv`;
     downloadBlob(blob, filename);
   }
 
@@ -842,8 +867,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   btnResetPresets.addEventListener('click', async () => {
-    if (confirm('Скинути предмети до стандартних?')) {
-      await MeetStorage.savePresets(MeetStorage.DEFAULT_PRESETS);
+    if (confirm(t('confirm_reset_presets'))) {
+      await MeetStorage.savePresets(MeetStorage.getDefaultPresetsForCurrentLang());
       await updateFilterOptions();
       await renderPresetsList();
     }
@@ -861,8 +886,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   btnResetClasses.addEventListener('click', async () => {
-    if (confirm('Відновити стандартні класи з 1 по 11 клас?')) {
-      await MeetStorage.saveClasses(MeetStorage.DEFAULT_CLASSES);
+    if (confirm(t('confirm_reset_classes'))) {
+      await MeetStorage.saveClasses(MeetStorage.getDefaultClassesForCurrentLang());
       await updateFilterOptions();
       await renderClassesList();
     }
@@ -886,10 +911,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const importedData = JSON.parse(event.target.result);
         await MeetStorage.importData(importedData);
-        alert('Дані успішно імпортовано!');
+        alert(t('alert_import_success'));
         await loadData();
       } catch (err) {
-        alert('Помилка імпорту: ' + err.message);
+        alert(t('alert_import_error') + err.message);
       }
     };
     reader.readAsText(file);
@@ -897,10 +922,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   btnClearDatabase.addEventListener('click', async () => {
-    const code = prompt('Введіть "ВИДАЛИТИ" для повного очищення бази:');
-    if (code === 'ВИДАЛИТИ') {
+    const code = prompt(t('prompt_clear_db'));
+    if (code === 'ВИДАЛИТИ' || code === 'DELETE') {
       await MeetStorage.clearAllMeetings();
-      alert('Базу очищено.');
+      alert(t('alert_db_cleared'));
       await loadData();
     }
   });
@@ -929,7 +954,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await MeetingCardGenerator.copyToClipboard(currentActiveMeeting);
       const originalText = btnCopyPng.innerHTML;
-      btnCopyPng.innerHTML = '✅ Скопійовано!';
+      btnCopyPng.innerHTML = escapeHtml(t('btn_copied'));
       setTimeout(() => { btnCopyPng.innerHTML = originalText; }, 2000);
     } catch {
       MeetingCardGenerator.downloadPNG(currentActiveMeeting);

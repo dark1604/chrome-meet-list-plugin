@@ -19,25 +19,39 @@ const MeetingCardGenerator = (() => {
     ctx.closePath();
   }
 
+  function t(key, params = {}) {
+    if (typeof MeetI18n !== 'undefined' && MeetI18n.t) {
+      return MeetI18n.t(key, params);
+    }
+    return key;
+  }
+
+  function getLocale() {
+    if (typeof MeetI18n !== 'undefined' && MeetI18n.getLocaleCode) {
+      return MeetI18n.getLocaleCode();
+    }
+    return 'uk-UA';
+  }
+
   function formatTime(isoString) {
     if (!isoString) return '';
     const d = new Date(isoString);
-    return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
   }
 
   function formatDate(isoString) {
     if (!isoString) return '';
     const d = new Date(isoString);
-    return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return d.toLocaleDateString(getLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   function formatDurationShort(seconds) {
     const sec = Math.max(0, Math.round(seconds || 0));
     if (sec > 0 && sec < 60) {
-      return `${sec} сек`;
+      return `${sec} ${t('unit_sec')}`;
     }
     const mins = Math.round(sec / 60);
-    return `${mins} хв`;
+    return `${mins} ${t('unit_min')}`;
   }
 
   function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
@@ -128,7 +142,7 @@ const MeetingCardGenerator = (() => {
 
     ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#34d399';
-    ctx.fillText('GOOGLE MEET ЗВІТ', 96, 78);
+    ctx.fillText(t('png_badge'), 96, 78);
 
     // Дата та час
     const dateStr = formatDate(meeting.startTime);
@@ -140,7 +154,7 @@ const MeetingCardGenerator = (() => {
     ctx.textAlign = 'left';
 
     // 3. Заголовок уроку та Клас
-    const subject = meeting.subject || 'Загальна зустріч';
+    const subject = meeting.subject || t('general_meeting');
     const schoolClass = meeting.schoolClass ? ` • ${meeting.schoolClass}` : '';
     const fullHeading = `${subject}${schoolClass}`;
 
@@ -152,11 +166,11 @@ const MeetingCardGenerator = (() => {
     if (meeting.customTitle) {
       ctx.font = '500 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#38bdf8';
-      ctx.fillText(`Тема: ${meeting.customTitle}`, 60, 175);
+      ctx.fillText(`${t('png_topic_prefix')}${meeting.customTitle}`, 60, 175);
     } else {
       ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#64748b';
-      ctx.fillText(`Код зустрічі: meet.google.com/${meeting.meetingCode || ''}`, 60, 175);
+      ctx.fillText(`${t('png_code_prefix')}meet.google.com/${meeting.meetingCode || ''}`, 60, 175);
     }
 
     // 4. Блок ключових показників (3 плашки)
@@ -175,9 +189,9 @@ const MeetingCardGenerator = (() => {
     const cardW = 340;
     const cardH = 96;
 
-    drawMetricCard(ctx, 60, cardsY, cardW, cardH, '👥', `${pCount}`, 'Приєдналося учнів', '#38bdf8');
-    drawMetricCard(ctx, 430, cardsY, cardW, cardH, '⏱️', durationText, 'Тривалість уроку', '#34d399');
-    drawMetricCard(ctx, 800, cardsY, cardW, cardH, '📊', `${avgAttendance}%`, 'Середня присутність', '#c084fc');
+    drawMetricCard(ctx, 60, cardsY, cardW, cardH, '👥', `${pCount}`, t('png_metric_students'), '#38bdf8');
+    drawMetricCard(ctx, 430, cardsY, cardW, cardH, '⏱️', durationText, t('png_metric_duration'), '#34d399');
+    drawMetricCard(ctx, 800, cardsY, cardW, cardH, '📊', `${avgAttendance}%`, t('png_metric_avg'), '#c084fc');
 
     // 5. Нотатка вчителя (якщо є)
     let currentY = 340;
@@ -192,7 +206,7 @@ const MeetingCardGenerator = (() => {
 
       ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#f59e0b';
-      ctx.fillText('📝 Швидка нотатка вчителя:', 80, currentY + 28);
+      ctx.fillText(t('png_teacher_note'), 80, currentY + 28);
 
       ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#e2e8f0';
@@ -204,9 +218,9 @@ const MeetingCardGenerator = (() => {
     // 6. Список приєднаних учнів (компактна хмара)
     ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#cbd5e1';
-    ctx.fillText(`Список присутніх (${pCount} учнів):`, 60, currentY + 24);
+    ctx.fillText(t('png_present_list', { count: pCount }), 60, currentY + 24);
 
-    const studentNames = Array.from(new Set(pValues.map(p => p.name).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'uk'));
+    const studentNames = Array.from(new Set(pValues.map(p => p.name).filter(Boolean))).sort((a, b) => a.localeCompare(b, getLocale()));
     let chipX = 60;
     let chipY = currentY + 40;
     const maxChipWidth = width - 120;
@@ -226,7 +240,7 @@ const MeetingCardGenerator = (() => {
           const rem = studentNames.length - displayedCount;
           if (rem > 0) {
             ctx.fillStyle = '#64748b';
-            ctx.fillText(`...та ще +${rem} учнів`, chipX, chipY + 18);
+            ctx.fillText(t('png_more_students', { count: rem }), chipX, chipY + 18);
           }
           break;
         }
@@ -246,16 +260,16 @@ const MeetingCardGenerator = (() => {
     if (studentNames.length === 0) {
       ctx.fillStyle = '#64748b';
       ctx.font = 'italic 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('Учасників не було зафіксовано', 60, currentY + 56);
+      ctx.fillText(t('png_no_participants'), 60, currentY + 56);
     }
 
     // 7. Нижній футер
     ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#475569';
-    ctx.fillText('Згенеровано розширенням Google Meet Attendance Tracker • Локальний звіт', 60, height - 35);
+    ctx.fillText(t('png_footer_left'), 60, height - 35);
 
     ctx.textAlign = 'right';
-    ctx.fillText('100% Локальне збереження', width - 60, height - 35);
+    ctx.fillText(t('png_footer_right'), width - 60, height - 35);
     ctx.textAlign = 'left';
 
     return canvas;
@@ -297,10 +311,10 @@ const MeetingCardGenerator = (() => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const subject = (meeting.subject || 'Урок').replace(/[\\/:*?"<>|]/g, '_');
+      const subject = (meeting.subject || t('png_filename_prefix')).replace(/[\\/:*?"<>|]/g, '_');
       const cls = (meeting.schoolClass || '').replace(/[\\/:*?"<>|]/g, '_');
       const dateStr = new Date(meeting.startTime || Date.now()).toISOString().slice(0, 10);
-      link.download = customFilename || `Картка_${subject}${cls ? '_' + cls : ''}_${dateStr}.png`;
+      link.download = customFilename || `${t('png_filename_prefix')}_${subject}${cls ? '_' + cls : ''}_${dateStr}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

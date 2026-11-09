@@ -12,37 +12,44 @@
         <div class="logo-circle">👥</div>
         <div>
           <h2 class="popup-title">Meet Tracker</h2>
-          <span class="popup-subtitle">Аналітика уроків</span>
+          <span class="popup-subtitle" data-i18n="popup_subtitle">Аналітика уроків</span>
         </div>
       </div>
-      <span class="status-indicator-dot" title="Працює локально"></span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="lang-switcher">
+          <button type="button" class="lang-btn active" data-lang-switch="uk">UA</button>
+          <button type="button" class="lang-btn" data-lang-switch="en">EN</button>
+        </div>
+        <span class="status-indicator-dot" data-i18n-title="local_indicator_title" title="Працює локально"></span>
+      </div>
     </div>
 
     <div class="popup-body">
       <div class="quick-status-card" id="status-card">
-        <div class="status-title">Стан розширення:</div>
-        <div class="status-desc" id="status-desc">Готовий до відстеження Google Meet</div>
+        <div class="status-title" data-i18n="popup_status_label">Стан розширення:</div>
+        <div class="status-desc" id="status-desc" data-i18n="popup_status_ready">Готовий до відстеження Google Meet</div>
       </div>
 
-      <button id="btn-open-dashboard" class="btn-popup-primary">
+      <button id="btn-open-dashboard" class="btn-popup-primary" data-i18n="popup_open_dashboard">
         📊 Відкрити повний журнал занять
       </button>
 
       <div class="recent-section">
         <div class="recent-header">
-          <span>Останні заняття:</span>
+          <span data-i18n="popup_recent_title">Останні заняття:</span>
         </div>
         <div id="recent-list" class="recent-list">
-          <div class="recent-empty">Записів ще немає</div>
+          <div class="recent-empty" data-i18n="popup_recent_empty">Записів ще немає</div>
         </div>
       </div>
     </div>
 
     <div class="popup-footer">
-      <span>100% локально на вашому комп'ютері</span>
+      <span data-i18n="footer_local_100">100% локально на вашому комп'ютері</span>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="storage.js"></script>
   <script src="popup.js"></script>
 </body>

@@ -130,8 +130,46 @@
 .gmeet-modal-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
+}
+
+.gmeet-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gmeet-lang-switcher {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.gmeet-lang-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.gmeet-lang-btn:hover {
+  color: #ffffff;
+}
+
+.gmeet-lang-btn.active {
+  background: #2563eb;
+  color: #ffffff;
 }
 
 .gmeet-modal-icon {
