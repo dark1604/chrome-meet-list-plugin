@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Meet Attendance</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="popup-header">
+      <div class="popup-logo">
+        <div class="logo-circle">👥</div>
+        <div>
+          <h2 class="popup-title">Meet Tracker</h2>
+          <span class="popup-subtitle">Аналітика уроків</span>
+        </div>
+      </div>
+      <span class="status-indicator-dot" title="Працює локально"></span>
+    </div>
+
+    <div class="popup-body">
+      <div class="quick-status-card" id="status-card">
+        <div class="status-title">Стан розширення:</div>
+        <div class="status-desc" id="status-desc">Готовий до відстеження Google Meet</div>
+      </div>
+
+      <button id="btn-open-dashboard" class="btn-popup-primary">
+        📊 Відкрити повний журнал занять
+      </button>
+
+      <div class="recent-section">
+        <div class="recent-header">
+          <span>Останні заняття:</span>
+        </div>
+        <div id="recent-list" class="recent-list">
+          <div class="recent-empty">Записів ще немає</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <span>100% локально на вашому комп'ютері</span>
+    </div>
+  </div>
+
+  <script src="storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
