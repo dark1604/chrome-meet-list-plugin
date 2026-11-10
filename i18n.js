@@ -239,12 +239,12 @@ const MeetI18n = (() => {
       post_placeholder_notes: 'Д/З параграф 12, виконати вправи 1-4...',
       post_png_title: '📷 Швидкий експорт результатів уроку (PNG-картка):',
       post_btn_download_png: '📥 Завантажити PNG',
-      post_btn_copy_png: '📋 Скопіювати картинку (Ctrl+V)',
-      post_feedback_saved: '✅ PNG-картку збережено на комп\'ютер!',
-      post_feedback_copied: '✅ Скопійовано! Вставте картинку через Ctrl+V у Telegram чи Viber.',
-      post_feedback_downloaded: '📥 Файл завантажено на комп\'ютер!',
-      post_btn_save_close: 'Зберегти в журнал',
-      post_btn_save_open: 'Зберегти та відкрити звіт'
+      post_btn_copy_png: '📋 Копіювати PNG',
+      post_feedback_saved: '✅ PNG-картку збережено!',
+      post_feedback_copied: '✅ Скопійовано! Вставте через Ctrl+V.',
+      post_feedback_downloaded: '📥 Файл завантажено!',
+      post_btn_save_close: '💾 Зберегти',
+      post_btn_save_open: '📊 Зберегти і в журнал'
     },
 
     en: {
@@ -478,12 +478,12 @@ const MeetI18n = (() => {
       post_placeholder_notes: 'Homework: Chapter 12, exercises 1-4...',
       post_png_title: '📷 Quick Visual Export (PNG Summary Card):',
       post_btn_download_png: '📥 Download PNG',
-      post_btn_copy_png: '📋 Copy Image (Ctrl+V)',
-      post_feedback_saved: '✅ PNG card saved to your computer!',
-      post_feedback_copied: '✅ Copied! Paste via Ctrl+V in Telegram, Viber, or Slack.',
-      post_feedback_downloaded: '📥 File downloaded to your computer!',
-      post_btn_save_close: 'Save to Log',
-      post_btn_save_open: 'Save & Open Report'
+      post_btn_copy_png: '📋 Copy PNG',
+      post_feedback_saved: '✅ PNG card saved!',
+      post_feedback_copied: '✅ Copied! Paste via Ctrl+V.',
+      post_feedback_downloaded: '📥 File downloaded!',
+      post_btn_save_close: '💾 Save',
+      post_btn_save_open: '📊 Save & Open Log'
     }
   };
 

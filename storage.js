@@ -292,40 +292,70 @@ const MeetStorage = (() => {
     return all.find(m => m.id === id) || null;
   }
 
-  async function saveMeeting(meeting) {
-    const all = await getAllMeetings();
-    const cleanParts = cleanParticipantsMap(meeting.participants || {});
-    const cleanMeeting = {
-      id: meeting.id || `meet_${meeting.meetingCode || 'unknown'}_${Date.now()}`,
-      meetingCode: meeting.meetingCode || 'unknown',
-      subject: meeting.subject || 'Загальна зустріч',
-      schoolClass: meeting.schoolClass || '',
-      customTitle: meeting.customTitle || '',
-      notes: meeting.notes || '',
-      startTime: meeting.startTime || new Date().toISOString(),
-      endTime: meeting.endTime || new Date().toISOString(),
-      durationSeconds: Math.max(0, meeting.durationSeconds || 0),
-      participantsCount: Object.keys(cleanParts).length,
-      participants: cleanParts,
-      updatedAt: new Date().toISOString()
-    };
+  // Послідовна черга запису для уникнення гонитви даних (race conditions) у chrome.storage.local
+  let writeQueue = Promise.resolve();
+  function enqueueWrite(taskFn) {
+    writeQueue = writeQueue.then(() => taskFn()).catch((err) => {
+      console.error('[MeetStorage] Write error:', err);
+    });
+    return writeQueue;
+  }
 
-    const existingIndex = all.findIndex(m => m.id === cleanMeeting.id);
-    if (existingIndex >= 0) {
-      all[existingIndex] = { ...all[existingIndex], ...cleanMeeting };
-    } else {
-      all.unshift(cleanMeeting);
-    }
+  async function saveMeeting(meeting, options = {}) {
+    return enqueueWrite(async () => {
+      const all = await getAllMeetings();
+      const existingIndex = all.findIndex(m => m.id === meeting.id);
+      const existing = existingIndex >= 0 ? all[existingIndex] : null;
 
-    return new Promise((resolve) => {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.set({ [STORAGE_KEY_MEETINGS]: all }, () => {
-          resolve(cleanMeeting);
-        });
-      } else {
-        localStorage.setItem(STORAGE_KEY_MEETINGS, JSON.stringify(all));
-        resolve(cleanMeeting);
+      const mergedRawParticipants = existing
+        ? { ...(existing.participants || {}), ...(meeting.participants || {}) }
+        : (meeting.participants || {});
+      const cleanParts = cleanParticipantsMap(mergedRawParticipants);
+
+      // Якщо це фонове автозбереження, не перезаписуємо вже обраний користувачем предмет і клас дефолтним значенням
+      let finalSubject = meeting.subject;
+      let finalClass = meeting.schoolClass;
+      if (options.isAutoSave && existing) {
+        const isDefaultSub = !finalSubject || finalSubject === 'Загальна зустріч' || finalSubject === 'General Meeting';
+        if (isDefaultSub && existing.subject && existing.subject !== 'Загальна зустріч' && existing.subject !== 'General Meeting') {
+          finalSubject = existing.subject;
+        }
+        if (!finalClass && existing.schoolClass) {
+          finalClass = existing.schoolClass;
+        }
       }
+
+      const cleanMeeting = {
+        id: meeting.id || (existing && existing.id) || `meet_${meeting.meetingCode || 'unknown'}_${Date.now()}`,
+        meetingCode: meeting.meetingCode || (existing && existing.meetingCode) || 'unknown',
+        subject: finalSubject || (existing && existing.subject) || 'Загальна зустріч',
+        schoolClass: finalClass !== undefined ? finalClass : ((existing && existing.schoolClass) || ''),
+        customTitle: meeting.customTitle !== undefined ? meeting.customTitle : ((existing && existing.customTitle) || ''),
+        notes: meeting.notes !== undefined ? meeting.notes : ((existing && existing.notes) || ''),
+        startTime: meeting.startTime || (existing && existing.startTime) || new Date().toISOString(),
+        endTime: meeting.endTime || (existing && existing.endTime) || new Date().toISOString(),
+        durationSeconds: Math.max(existing ? (existing.durationSeconds || 0) : 0, meeting.durationSeconds || 0),
+        participantsCount: Object.keys(cleanParts).length,
+        participants: cleanParts,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (existingIndex >= 0) {
+        all[existingIndex] = { ...existing, ...cleanMeeting };
+      } else {
+        all.unshift(cleanMeeting);
+      }
+
+      return new Promise((resolve) => {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({ [STORAGE_KEY_MEETINGS]: all }, () => {
+            resolve(cleanMeeting);
+          });
+        } else {
+          localStorage.setItem(STORAGE_KEY_MEETINGS, JSON.stringify(all));
+          resolve(cleanMeeting);
+        }
+      });
     });
   }
 

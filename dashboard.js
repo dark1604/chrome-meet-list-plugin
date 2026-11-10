@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const updated = allMeetings.find(m => m.id === currentActiveMeeting.id);
       if (updated) {
         currentActiveMeeting = updated;
+        refreshModalHeader();
         renderParticipantTable();
       }
     }

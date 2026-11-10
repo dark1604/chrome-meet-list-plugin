@@ -1,7 +1,8 @@
 /**
  * content.js - Google Meet Attendance Tracker Content Script
- * Чітко розрізняє екран підготовки/лобі та реальний вхід на урок.
- * Запис починається ВИКЛЮЧНО в момент фактичного входу в активну зустріч з класом.
+ * - Чітко розрізняє екран підготовки/лобі та реальний вхід на урок.
+ * - Блокує повторне створення дублюючої зустрічі під час/після виходу з дзвінка.
+ * - Показує компактне спливаюче меню СПРАВА з вибором ТІЛЬКИ Предмета та Класу.
  */
 
 (() => {
@@ -20,24 +21,22 @@
 
   let currentMeetingCode = null;
   let isMeetingActive = false;
+  let hasEndedCurrentCall = false; // Захист від повторного авто-старту нової зустрічі після закриття
   let meetingStartTime = null;
   let meetingId = null;
-  let postModalShown = false;
   let scanInterval = null;
   let hudElement = null;
+  let endedMeetingSnapshot = null;
 
-  // Метадані уроку (оновлюються у вікні завершення зустрічі)
+  // Запам'ятовуємо останній вибраний предмет і клас для зручності
   let currentMetadata = {
-    subject: 'Загальна зустріч',
-    schoolClass: '',
-    customTitle: '',
-    notes: ''
+    subject: localStorage.getItem('meet_last_subject') || 'Інформатика',
+    schoolClass: localStorage.getItem('meet_last_class') || '6 клас'
   };
 
   // Словник зафіксованих учнів: { [name]: { name, firstJoined, lastSeen, totalSeconds, sessions: [] } }
   let participants = {};
 
-  // Системні фрази інтерфейсу Google Meet, які треба ігнорувати при скануванні імен
   const IGNORED_STRINGS = [
     'hd720p', 'webcam', 'камера', 'мікрофон', 'фони й ефекти', 'розмити фон',
     'запитайте gemini', 'лише ви', 'налаштування', 'деталі зустрічі', 'учасники',
@@ -52,7 +51,6 @@
     return String(text).replace(/[&<>"']/g, m => map[m]);
   }
 
-  // Отримання коду кімнати з URL
   function extractMeetingCode() {
     const match = window.location.pathname.match(/([a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{3})/i);
     return match ? match[1].toLowerCase() : null;
@@ -64,9 +62,6 @@
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  /**
-   * Витягує чистий текст із DOM-елемента без внутрішніх іконок Material Icons та кнопок
-   */
   function extractCleanElementText(el) {
     if (!el) return '';
     const attrName = el.getAttribute('data-self-name');
@@ -97,7 +92,26 @@
     return name.trim();
   }
 
-  // --- Перевірка: чи користувач ще на екрані налаштування (лобі / передпокій) ---
+  // Перевірка: чи користувач на екрані завершеного дзвінка ("Ви залишили зустріч" / "You left the meeting")
+  function isUserOnPostCallScreen() {
+    const buttons = Array.from(document.querySelectorAll('button, a[role="button"]'));
+    for (const b of buttons) {
+      const text = (b.textContent || '').trim().toLowerCase();
+      if (
+        text.includes('повернутися на зустріч') ||
+        text.includes('повернутися на головний екран') ||
+        text.includes('rejoin') ||
+        text.includes('return to home screen')
+      ) {
+        if (b.offsetParent !== null || b.offsetWidth > 0) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // Перевірка: чи користувач ще на екрані налаштування (лобі / передпокій)
   function isUserInLobby() {
     const buttons = Array.from(document.querySelectorAll('button'));
     for (const b of buttons) {
@@ -112,7 +126,6 @@
                            aria.includes('приєднатися зараз') ||
                            aria.includes('join now');
 
-      // Якщо кнопка приєднання дійсно видима на екрані — ми ще в лобі
       if (isJoinButton && !text.includes('знову') && b.offsetParent !== null && b.offsetWidth > 0) {
         return true;
       }
@@ -120,9 +133,9 @@
     return false;
   }
 
-  // --- Перевірка: чи користувач вже всередині активного дзвінка зі співрозмовниками ---
+  // Перевірка: чи користувач всередині активного дзвінка
   function isUserInActiveCall() {
-    if (isUserInLobby()) {
+    if (isUserInLobby() || isUserOnPostCallScreen()) {
       return false;
     }
 
@@ -144,9 +157,36 @@
     return Boolean(hasLeaveBtn || hasInCallControls);
   }
 
-  // --- Плаваючий віджет (HUD) ---
+  // Програмне закриття дзвінка у Google Meet (при натисканні кнопки "Завершити" на HUD)
+  function triggerGoogleMeetLeaveCall() {
+    const leaveBtn = document.querySelector(
+      'button[jsname="CQylAd"], ' +
+      'button[aria-label*="Залишити" i], ' +
+      'button[aria-label*="Leave" i], ' +
+      'button[aria-label*="Завершити" i], ' +
+      'button[aria-label*="Покинути" i]'
+    );
+    if (leaveBtn) {
+      leaveBtn.click();
+      // Якщо Google Meet показує меню організатора ("Просто вийти з дзвінка" / "Завершити дзвінок для всіх")
+      setTimeout(() => {
+        const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], button'));
+        const confirmBtn = menuItems.find(el => {
+          const txt = (el.textContent || '').trim().toLowerCase();
+          return txt.includes('просто вийти') ||
+                 txt.includes('завершити дзвінок для всіх') ||
+                 txt.includes('залишити дзвінок') ||
+                 txt.includes('just leave the call') ||
+                 txt.includes('end call for everyone');
+        });
+        if (confirmBtn) confirmBtn.click();
+      }, 200);
+    }
+  }
+
+  // --- Плаваючий віджет (HUD) під час уроку ---
   function createOrUpdateHUD() {
-    if (!isMeetingActive) return;
+    if (!isMeetingActive || hasEndedCurrentCall) return;
 
     if (!hudElement || !document.body.contains(hudElement)) {
       hudElement = document.createElement('div');
@@ -181,6 +221,7 @@
 
       document.getElementById('gmeet-hud-finish')?.addEventListener('click', () => {
         onMeetingEnded();
+        triggerGoogleMeetLeaveCall();
       });
 
       document.getElementById('gmeet-hud-dash')?.addEventListener('click', () => {
@@ -254,11 +295,10 @@
 
   // --- Сканування присутніх учнів ---
   function scanParticipants() {
-    if (!isMeetingActive) return;
+    if (!isMeetingActive || hasEndedCurrentCall) return;
 
     const currentSampleNames = new Set();
 
-    // 1. Пошук у бічній панелі учасників (якщо відкрита)
     const listItems = document.querySelectorAll('[role="listitem"]');
     listItems.forEach(item => {
       const nameEl = item.querySelector('.zWGUib, [data-self-name], span[dir="auto"]');
@@ -268,20 +308,17 @@
       }
     });
 
-    // 2. Пошук на відеоплитках учнів на екрані (span[jsname="Wp6Ze"])
     const nameSpans = document.querySelectorAll('span[jsname="Wp6Ze"]');
     nameSpans.forEach(span => {
       const text = cleanParticipantName(extractCleanElementText(span));
       if (text) currentSampleNames.add(text);
     });
 
-    // 3. Пошук атрибута data-self-name (завжди чисте ім'я без іконок)
     document.querySelectorAll('[data-self-name]').forEach(el => {
       const name = cleanParticipantName(el.getAttribute('data-self-name'));
       if (name) currentSampleNames.add(name);
     });
 
-    // 4. Пошук тексту імені в кутках відеоконтейнерів
     document.querySelectorAll('div[aria-label]').forEach(el => {
       const label = el.getAttribute('aria-label');
       if (label && label.includes('–') && !label.includes('Налаштування')) {
@@ -298,7 +335,6 @@
 
     currentSampleNames.forEach(name => {
       if (!participants[name]) {
-        console.log('[Meet Tracker] 👤 До уроку приєднався:', name);
         participants[name] = {
           name: name,
           firstJoined: nowIso,
@@ -314,7 +350,6 @@
         p.lastSeen = nowIso;
 
         if (diffSec > 15) {
-          console.log('[Meet Tracker] 👤 Учень повернувся на урок:', name);
           p.sessions.push({ joinTime: nowIso, leaveTime: nowIso });
         } else {
           const lastSession = p.sessions[p.sessions.length - 1];
@@ -335,8 +370,8 @@
     autoSaveSession();
   }
 
-  function autoSaveSession(force = false) {
-    if (!isMeetingActive && !force) return;
+  function autoSaveSession() {
+    if (!isMeetingActive || hasEndedCurrentCall) return;
     if (!meetingId || !meetingStartTime) return;
 
     const duration = Math.round((Date.now() - meetingStartTime) / 1000);
@@ -344,10 +379,10 @@
     const draftMeeting = {
       id: meetingId,
       meetingCode: currentMeetingCode,
-      subject: currentMetadata.subject || 'Загальна зустріч',
+      subject: currentMetadata.subject || 'Інформатика',
       schoolClass: currentMetadata.schoolClass || '',
-      customTitle: currentMetadata.customTitle || '',
-      notes: currentMetadata.notes || '',
+      customTitle: '',
+      notes: '',
       startTime: new Date(meetingStartTime).toISOString(),
       endTime: new Date().toISOString(),
       durationSeconds: duration,
@@ -355,13 +390,13 @@
     };
 
     if (typeof MeetStorage !== 'undefined') {
-      MeetStorage.saveMeeting(draftMeeting).catch(err => {
-        console.error('[Meet Tracker] Помилка збереження:', err);
+      MeetStorage.saveMeeting(draftMeeting, { isAutoSave: true }).catch(err => {
+        console.error('[Meet Tracker] Помилка автозбереження:', err);
       });
     }
   }
 
-  // --- Безперервний моніторинг статусу ---
+  // --- Моніторинг статусу кімнати ---
   function checkPageStatus() {
     const code = extractMeetingCode();
 
@@ -369,27 +404,39 @@
       if (isMeetingActive) {
         onMeetingEnded();
       }
+      currentMeetingCode = null;
+      hasEndedCurrentCall = false;
       return;
+    }
+
+    // Якщо змінився код кімнати (перехід в іншу зустріч), знімаємо блокування
+    if (currentMeetingCode && currentMeetingCode !== code) {
+      if (isMeetingActive) {
+        onMeetingEnded();
+      }
+      hasEndedCurrentCall = false;
     }
 
     currentMeetingCode = code;
     const inActiveCall = isUserInActiveCall();
 
+    // Якщо користувач вже завершив урок у цій кімнаті, НЕ починаємо нову зустріч автоматично
+    if (hasEndedCurrentCall) {
+      return;
+    }
+
     if (inActiveCall && !isMeetingActive) {
-      // Користувач натиснув "Приєднатися" і увійшов на урок
+      // Старт запису строго після входу в активний дзвінок
       isMeetingActive = true;
       meetingStartTime = Date.now();
       meetingId = `meet_${currentMeetingCode}_${meetingStartTime}`;
       participants = {};
-      postModalShown = false;
-      currentMetadata = {
-        subject: 'Загальна зустріч',
-        schoolClass: '',
-        customTitle: '',
-        notes: ''
-      };
+      endedMeetingSnapshot = null;
 
-      console.log(`[Meet Tracker] 🟢 УРОК РОЗПОЧАТО! Код: ${currentMeetingCode}. Час старту: ${new Date(meetingStartTime).toLocaleTimeString()}`);
+      // Прибираємо попередній правий попап, якщо він був відкритий
+      document.getElementById('gmeet-tracker-side-popup')?.remove();
+
+      console.log(`[Meet Tracker] 🟢 УРОК РОЗПОЧАТО! Код: ${currentMeetingCode}`);
 
       createOrUpdateHUD();
 
@@ -398,34 +445,57 @@
         scanParticipants();
       }
     } else if (inActiveCall && isMeetingActive) {
-      // Щосекундне оновлення таймера у віджеті
       updateHUDMetrics();
     } else if (!inActiveCall && isMeetingActive) {
-      // Урок закінчився або користувач вийшов
       console.log('[Meet Tracker] Дзвінок завершено.');
       onMeetingEnded();
     }
   }
 
-  // Делегований перехоплювач кліку по червоній слухавці завершення дзвінка
+  // Слухач кліків: вихід із зустрічі АБО явне натискання "Повернутися на зустріч" / "Приєднатися"
   document.addEventListener('click', (e) => {
-    if (!isMeetingActive) return;
-    const leaveBtn = e.target.closest(
-      'button[jsname="CQylAd"], ' +
-      'button[aria-label*="Залишити" i], ' +
-      'button[aria-label*="Leave" i], ' +
-      'button[aria-label*="Завершити" i], ' +
-      'button[aria-label*="Покинути" i]'
-    );
-    if (leaveBtn) {
-      console.log('[Meet Tracker] Натиснуто кнопку виходу.');
-      setTimeout(onMeetingEnded, 250);
+    const btn = e.target.closest('button, a[role="button"]');
+    if (!btn) return;
+
+    const text = (btn.textContent || '').trim().toLowerCase();
+    const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+    const jsname = btn.getAttribute('jsname') || '';
+
+    // 1. Якщо натиснуто червону кнопку завершення дзвінка
+    const isLeaveBtn = jsname === 'CQylAd' ||
+                       aria.includes('залишити') ||
+                       aria.includes('leave') ||
+                       aria.includes('завершити дзвінок') ||
+                       aria.includes('покинути') ||
+                       text.includes('просто вийти з дзвінка') ||
+                       text.includes('завершити дзвінок для всіх') ||
+                       text.includes('just leave the call') ||
+                       text.includes('end call for everyone');
+
+    if (isLeaveBtn && isMeetingActive) {
+      console.log('[Meet Tracker] Натиснуто кнопку виходу з зустрічі.');
+      onMeetingEnded();
+      return;
+    }
+
+    // 2. Якщо користувач свідомо натискає "Повернутися на зустріч" / "Rejoin" / "Приєднатися зараз"
+    const isRejoinBtn = text.includes('повернутися на зустріч') ||
+                        text.includes('rejoin') ||
+                        text.includes('приєднатися зараз') ||
+                        text.includes('join now');
+
+    if (isRejoinBtn && hasEndedCurrentCall) {
+      console.log('[Meet Tracker] Користувач повторно приєднується до зустрічі.');
+      setTimeout(() => {
+        hasEndedCurrentCall = false;
+      }, 1000);
     }
   }, true);
 
   function onMeetingEnded() {
     if (!isMeetingActive) return;
     isMeetingActive = false;
+    hasEndedCurrentCall = true; // Забороняємо старт нової сесії під час закриття дзвінка
 
     if (scanInterval) {
       clearInterval(scanInterval);
@@ -433,21 +503,39 @@
     }
 
     removeHUD();
-    autoSaveSession(true);
-    showPostMeetingModal();
+
+    const duration = meetingStartTime ? Math.max(1, Math.round((Date.now() - meetingStartTime) / 1000)) : 0;
+
+    // Фіксуємо незмінний знімок завершеного уроку
+    endedMeetingSnapshot = {
+      id: meetingId || `meet_${currentMeetingCode || 'room'}_${Date.now()}`,
+      meetingCode: currentMeetingCode || 'unknown',
+      subject: currentMetadata.subject || 'Інформатика',
+      schoolClass: currentMetadata.schoolClass || '',
+      customTitle: '',
+      notes: '',
+      startTime: new Date(meetingStartTime || Date.now()).toISOString(),
+      endTime: new Date().toISOString(),
+      durationSeconds: duration,
+      participants: JSON.parse(JSON.stringify(participants || {}))
+    };
+
+    if (typeof MeetStorage !== 'undefined') {
+      MeetStorage.saveMeeting(endedMeetingSnapshot);
+    }
+
+    showPostMeetingSidePopup(endedMeetingSnapshot);
   }
 
-  // --- Модальне вікно підсумків уроку після виходу ---
-  async function showPostMeetingModal() {
-    if (postModalShown) return;
-    postModalShown = true;
+  // --- Компактне спливаюче меню СПРАВА після завершення зустрічі (ТІЛЬКИ Предмет та Клас) ---
+  async function showPostMeetingSidePopup(snapshot) {
+    if (!snapshot) return;
+
+    document.getElementById('gmeet-tracker-side-popup')?.remove();
 
     if (typeof MeetI18n !== 'undefined' && MeetI18n.init) {
       await MeetI18n.init();
     }
-
-    const duration = meetingStartTime ? Math.round((Date.now() - meetingStartTime) / 1000) : 0;
-    const participantsList = Object.values(participants);
 
     let presets = [];
     let classes = [];
@@ -459,136 +547,111 @@
       classes = ['1 клас', '2 клас', '3 клас', '4 клас', '5 клас', '6 клас', '7 клас', '8 клас', '9 клас', '10 клас', '11 клас'];
     }
 
+    const participantsCount = Object.keys(snapshot.participants || {}).length;
     const activeLang = (typeof MeetI18n !== 'undefined' && MeetI18n.getLang) ? MeetI18n.getLang() : 'uk';
-    const modalOverlay = document.createElement('div');
-    modalOverlay.id = 'gmeet-tracker-modal-overlay';
 
-    modalOverlay.innerHTML = `
-      <div class="gmeet-modal-card">
-        <div class="gmeet-modal-header">
-          <div class="gmeet-modal-header-left">
-            <div class="gmeet-modal-icon">📚</div>
-            <div>
-              <h2 class="gmeet-modal-title" data-i18n="post_modal_title">${escapeHtml(t('post_modal_title'))}</h2>
-              <p class="gmeet-modal-subtitle" id="gmeet-modal-subtitle-el">${t('post_modal_subtitle', { code: escapeHtml(currentMeetingCode) })}</p>
-            </div>
+    // Визначаємо початково вибраний предмет і клас
+    const savedSubject = localStorage.getItem('meet_last_subject') || presets[0] || 'Інформатика';
+    const savedClass = localStorage.getItem('meet_last_class') !== null ? localStorage.getItem('meet_last_class') : (classes[5] || '6 клас');
+
+    const popupEl = document.createElement('div');
+    popupEl.id = 'gmeet-tracker-side-popup';
+
+    popupEl.innerHTML = `
+      <div class="gmeet-side-header">
+        <div class="gmeet-side-header-left">
+          <div class="gmeet-side-icon">📚</div>
+          <div>
+            <h3 class="gmeet-side-title" data-i18n="post_modal_title">${escapeHtml(t('post_modal_title'))}</h3>
+            <p class="gmeet-side-subtitle">Код: <b>${escapeHtml(snapshot.meetingCode)}</b></p>
           </div>
+        </div>
+        <div class="gmeet-side-header-right">
           <div class="gmeet-lang-switcher">
             <button type="button" class="gmeet-lang-btn ${activeLang === 'uk' ? 'active' : ''}" data-lang-switch="uk">UA</button>
             <button type="button" class="gmeet-lang-btn ${activeLang === 'en' ? 'active' : ''}" data-lang-switch="en">EN</button>
           </div>
+          <button type="button" class="gmeet-side-close" id="gmeet-side-close-btn" title="Закрити">&times;</button>
         </div>
+      </div>
 
-        <div class="gmeet-modal-summary">
-          <div class="gmeet-summary-item">
-            <div class="gmeet-summary-num">${participantsList.length}</div>
-            <div class="gmeet-summary-label" data-i18n="post_summary_students">${escapeHtml(t('post_summary_students'))}</div>
-          </div>
-          <div class="gmeet-summary-item">
-            <div class="gmeet-summary-num">${formatSeconds(duration)}</div>
-            <div class="gmeet-summary-label" data-i18n="post_summary_duration">${escapeHtml(t('post_summary_duration'))}</div>
-          </div>
-          <div class="gmeet-summary-item">
-            <div class="gmeet-summary-num">100%</div>
-            <div class="gmeet-summary-label" data-i18n="post_summary_local">${escapeHtml(t('post_summary_local'))}</div>
+      <div class="gmeet-side-stats">
+        <div class="gmeet-side-stat-box">
+          <span>👥</span>
+          <div>
+            <div class="gmeet-side-stat-val">${participantsCount}</div>
+            <div class="gmeet-side-stat-lbl" data-i18n="post_summary_students">${escapeHtml(t('post_summary_students'))}</div>
           </div>
         </div>
-
-        <div class="gmeet-form-row">
-          <div class="gmeet-form-group">
-            <label class="gmeet-form-label" for="gmeet-select-subject" data-i18n="post_label_subject">${escapeHtml(t('post_label_subject'))}</label>
-            <select id="gmeet-select-subject" class="gmeet-select">
-              ${presets.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')}
-              <option value="__custom__" data-i18n="post_opt_custom_subject">${escapeHtml(t('post_opt_custom_subject'))}</option>
-            </select>
-          </div>
-
-          <div class="gmeet-form-group">
-            <label class="gmeet-form-label" for="gmeet-select-class" data-i18n="post_label_class">${escapeHtml(t('post_label_class'))}</label>
-            <select id="gmeet-select-class" class="gmeet-select">
-              <option value="" data-i18n="no_class">${escapeHtml(t('no_class'))}</option>
-              ${classes.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
-              <option value="__custom_class__" data-i18n="post_opt_custom_class">${escapeHtml(t('post_opt_custom_class'))}</option>
-            </select>
+        <div class="gmeet-side-stat-box">
+          <span>⏱️</span>
+          <div>
+            <div class="gmeet-side-stat-val">${formatSeconds(snapshot.durationSeconds)}</div>
+            <div class="gmeet-side-stat-lbl" data-i18n="post_summary_duration">${escapeHtml(t('post_summary_duration'))}</div>
           </div>
         </div>
+      </div>
 
-        <div class="gmeet-form-row">
-          <div class="gmeet-form-group" id="gmeet-custom-subject-group" style="display: none;">
-            <label class="gmeet-form-label" for="gmeet-input-custom-subject" data-i18n="post_label_custom_subject">${escapeHtml(t('post_label_custom_subject'))}</label>
-            <input type="text" id="gmeet-input-custom-subject" class="gmeet-input" data-i18n-placeholder="post_placeholder_custom_subject" placeholder="${escapeHtml(t('post_placeholder_custom_subject'))}" />
-          </div>
+      <div class="gmeet-form-group">
+        <label class="gmeet-form-label" for="gmeet-select-subject" data-i18n="post_label_subject">${escapeHtml(t('post_label_subject'))}</label>
+        <select id="gmeet-select-subject" class="gmeet-select">
+          ${presets.map(p => `<option value="${escapeHtml(p)}" ${p === savedSubject ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
+          <option value="__custom__" data-i18n="post_opt_custom_subject">${escapeHtml(t('post_opt_custom_subject'))}</option>
+        </select>
+      </div>
 
-          <div class="gmeet-form-group" id="gmeet-custom-class-group" style="display: none;">
-            <label class="gmeet-form-label" for="gmeet-input-custom-class" data-i18n="post_label_custom_class">${escapeHtml(t('post_label_custom_class'))}</label>
-            <input type="text" id="gmeet-input-custom-class" class="gmeet-input" data-i18n-placeholder="post_placeholder_custom_class" placeholder="${escapeHtml(t('post_placeholder_custom_class'))}" />
-          </div>
-        </div>
+      <div class="gmeet-form-group" id="gmeet-custom-subject-group" style="display: none;">
+        <input type="text" id="gmeet-input-custom-subject" class="gmeet-input" data-i18n-placeholder="post_placeholder_custom_subject" placeholder="${escapeHtml(t('post_placeholder_custom_subject'))}" />
+      </div>
 
-        <div class="gmeet-form-group">
-          <label class="gmeet-form-label" for="gmeet-input-title" data-i18n="post_label_topic">${escapeHtml(t('post_label_topic'))}</label>
-          <input type="text" id="gmeet-input-title" class="gmeet-input" data-i18n-placeholder="post_placeholder_topic" placeholder="${escapeHtml(t('post_placeholder_topic'))}" />
-        </div>
+      <div class="gmeet-form-group">
+        <label class="gmeet-form-label" for="gmeet-select-class" data-i18n="post_label_class">${escapeHtml(t('post_label_class'))}</label>
+        <select id="gmeet-select-class" class="gmeet-select">
+          ${classes.map(c => `<option value="${escapeHtml(c)}" ${c === savedClass ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+          <option value="" ${savedClass === '' ? 'selected' : ''} data-i18n="no_class">${escapeHtml(t('no_class'))}</option>
+          <option value="__custom_class__" data-i18n="post_opt_custom_class">${escapeHtml(t('post_opt_custom_class'))}</option>
+        </select>
+      </div>
 
-        <div class="gmeet-form-group">
-          <label class="gmeet-form-label" for="gmeet-input-notes" data-i18n="post_label_notes">${escapeHtml(t('post_label_notes'))}</label>
-          <textarea id="gmeet-input-notes" class="gmeet-textarea" data-i18n-placeholder="post_placeholder_notes" placeholder="${escapeHtml(t('post_placeholder_notes'))}"></textarea>
-        </div>
+      <div class="gmeet-form-group" id="gmeet-custom-class-group" style="display: none;">
+        <input type="text" id="gmeet-input-custom-class" class="gmeet-input" data-i18n-placeholder="post_placeholder_custom_class" placeholder="${escapeHtml(t('post_placeholder_custom_class'))}" />
+      </div>
 
-        <!-- Швидкий експорт прямокутної PNG-картки -->
-        <div class="gmeet-png-export-section">
-          <div class="gmeet-png-title">
-            <span data-i18n="post_png_title">${escapeHtml(t('post_png_title'))}</span>
-          </div>
-          <div class="gmeet-png-buttons">
-            <button type="button" id="gmeet-btn-download-png" class="gmeet-btn-action" data-i18n="post_btn_download_png">
-              ${escapeHtml(t('post_btn_download_png'))}
-            </button>
-            <button type="button" id="gmeet-btn-copy-png" class="gmeet-btn-action" data-i18n="post_btn_copy_png">
-              ${escapeHtml(t('post_btn_copy_png'))}
-            </button>
-          </div>
-          <div id="gmeet-png-feedback" class="gmeet-png-feedback" style="display: none;"></div>
-        </div>
+      <div class="gmeet-png-mini-bar">
+        <button type="button" id="gmeet-btn-download-png" class="gmeet-btn-mini" data-i18n="post_btn_download_png">
+          ${escapeHtml(t('post_btn_download_png'))}
+        </button>
+        <button type="button" id="gmeet-btn-copy-png" class="gmeet-btn-mini" data-i18n="post_btn_copy_png">
+          ${escapeHtml(t('post_btn_copy_png'))}
+        </button>
+      </div>
+      <div id="gmeet-png-feedback" class="gmeet-png-feedback" style="display: none;"></div>
 
-        <div class="gmeet-modal-actions">
-          <button id="gmeet-btn-save-close" class="gmeet-btn-cancel" data-i18n="post_btn_save_close">${escapeHtml(t('post_btn_save_close'))}</button>
-          <button id="gmeet-btn-save-open" class="gmeet-btn-submit" data-i18n="post_btn_save_open">${escapeHtml(t('post_btn_save_open'))}</button>
-        </div>
+      <div class="gmeet-side-actions">
+        <button type="button" id="gmeet-btn-save-close" class="gmeet-btn-save" data-i18n="post_btn_save_close">
+          ${escapeHtml(t('post_btn_save_close'))}
+        </button>
+        <button type="button" id="gmeet-btn-save-open" class="gmeet-btn-save-open" data-i18n="post_btn_save_open">
+          ${escapeHtml(t('post_btn_save_open'))}
+        </button>
       </div>
     `;
 
-    document.body.appendChild(modalOverlay);
+    document.body.appendChild(popupEl);
 
-    // Language switch inside post-meeting modal
-    modalOverlay.querySelectorAll('[data-lang-switch]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const lang = btn.getAttribute('data-lang-switch');
-        if (typeof MeetI18n !== 'undefined') {
-          await MeetI18n.setLang(lang);
-          MeetI18n.applyToDOM(modalOverlay);
-          const subEl = document.getElementById('gmeet-modal-subtitle-el');
-          if (subEl) subEl.innerHTML = t('post_modal_subtitle', { code: escapeHtml(currentMeetingCode) });
-        }
-      });
-    });
+    const selectEl = popupEl.querySelector('#gmeet-select-subject');
+    const customGroup = popupEl.querySelector('#gmeet-custom-subject-group');
+    const customInput = popupEl.querySelector('#gmeet-input-custom-subject');
 
-    const selectEl = document.getElementById('gmeet-select-subject');
-    const customGroup = document.getElementById('gmeet-custom-subject-group');
-    const customInput = document.getElementById('gmeet-input-custom-subject');
+    const selectClassEl = popupEl.querySelector('#gmeet-select-class');
+    const customClassGroup = popupEl.querySelector('#gmeet-custom-class-group');
+    const customClassInput = popupEl.querySelector('#gmeet-input-custom-class');
+    const pngFeedback = popupEl.querySelector('#gmeet-png-feedback');
 
-    const selectClassEl = document.getElementById('gmeet-select-class');
-    const customClassGroup = document.getElementById('gmeet-custom-class-group');
-    const customClassInput = document.getElementById('gmeet-input-custom-class');
-
-    const titleInput = document.getElementById('gmeet-input-title');
-    const notesInput = document.getElementById('gmeet-input-notes');
-    const pngFeedback = document.getElementById('gmeet-png-feedback');
-
-    function syncCurrentMetadata() {
-      let finalSubject = selectEl ? selectEl.value : 'Загальна зустріч';
+    function readSelectedMeetingRecord() {
+      let finalSubject = selectEl ? selectEl.value : (presets[0] || 'Інформатика');
       if (finalSubject === '__custom__') {
-        finalSubject = (customInput ? customInput.value.trim() : '') || 'Спеціальна зустріч';
+        finalSubject = (customInput ? customInput.value.trim() : '') || t('special_meeting');
       }
 
       let finalClass = selectClassEl ? selectClassEl.value : '';
@@ -598,56 +661,71 @@
 
       currentMetadata = {
         subject: finalSubject,
-        schoolClass: finalClass,
-        customTitle: titleInput ? titleInput.value.trim() : '',
-        notes: notesInput ? notesInput.value.trim() : ''
+        schoolClass: finalClass
       };
+
+      try {
+        localStorage.setItem('meet_last_subject', finalSubject);
+        localStorage.setItem('meet_last_class', finalClass);
+      } catch {}
+
+      snapshot.subject = finalSubject;
+      snapshot.schoolClass = finalClass;
+      return { ...snapshot };
     }
+
+    async function persistSelectionImmediately() {
+      const updated = readSelectedMeetingRecord();
+      if (typeof MeetStorage !== 'undefined') {
+        await MeetStorage.saveMeeting(updated);
+      }
+      return updated;
+    }
+
+    // Зберігаємо початково вибрані предмет і клас одразу при появі попапу
+    persistSelectionImmediately();
 
     selectEl?.addEventListener('change', () => {
       if (selectEl.value === '__custom__') {
         customGroup.style.display = 'block';
-        customInput.focus();
+        customInput?.focus();
       } else {
         customGroup.style.display = 'none';
       }
-      syncCurrentMetadata();
+      persistSelectionImmediately();
     });
 
     selectClassEl?.addEventListener('change', () => {
       if (selectClassEl.value === '__custom_class__') {
         customClassGroup.style.display = 'block';
-        customClassInput.focus();
+        customClassInput?.focus();
       } else {
         customClassGroup.style.display = 'none';
       }
-      syncCurrentMetadata();
+      persistSelectionImmediately();
     });
 
-    [customInput, customClassInput, titleInput, notesInput].forEach(inp => {
-      inp?.addEventListener('input', syncCurrentMetadata);
+    customInput?.addEventListener('input', persistSelectionImmediately);
+    customClassInput?.addEventListener('input', persistSelectionImmediately);
+
+    // Перемикач мови всередині правого попапу
+    popupEl.querySelectorAll('[data-lang-switch]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const lang = btn.getAttribute('data-lang-switch');
+        if (typeof MeetI18n !== 'undefined') {
+          await MeetI18n.setLang(lang);
+          MeetI18n.applyToDOM(popupEl);
+        }
+      });
     });
 
-    syncCurrentMetadata();
+    popupEl.querySelector('#gmeet-side-close-btn')?.addEventListener('click', async () => {
+      await persistSelectionImmediately();
+      popupEl.remove();
+    });
 
-    function getCurrentMeetingObject() {
-      syncCurrentMetadata();
-      return {
-        id: meetingId || `meet_${currentMeetingCode}_${Date.now()}`,
-        meetingCode: currentMeetingCode,
-        subject: currentMetadata.subject,
-        schoolClass: currentMetadata.schoolClass,
-        customTitle: currentMetadata.customTitle,
-        notes: currentMetadata.notes,
-        startTime: new Date(meetingStartTime || Date.now()).toISOString(),
-        endTime: new Date().toISOString(),
-        durationSeconds: duration,
-        participants: participants
-      };
-    }
-
-    document.getElementById('gmeet-btn-download-png')?.addEventListener('click', async () => {
-      const currentMeeting = getCurrentMeetingObject();
+    popupEl.querySelector('#gmeet-btn-download-png')?.addEventListener('click', async () => {
+      const currentMeeting = await persistSelectionImmediately();
       if (typeof MeetingCardGenerator !== 'undefined') {
         MeetingCardGenerator.downloadPNG(currentMeeting);
         if (pngFeedback) {
@@ -656,13 +734,10 @@
           pngFeedback.style.color = '#34d399';
         }
       }
-      if (typeof MeetStorage !== 'undefined') {
-        await MeetStorage.saveMeeting(currentMeeting);
-      }
     });
 
-    document.getElementById('gmeet-btn-copy-png')?.addEventListener('click', async () => {
-      const currentMeeting = getCurrentMeetingObject();
+    popupEl.querySelector('#gmeet-btn-copy-png')?.addEventListener('click', async () => {
+      const currentMeeting = await persistSelectionImmediately();
       if (typeof MeetingCardGenerator !== 'undefined') {
         try {
           await MeetingCardGenerator.copyToClipboard(currentMeeting);
@@ -671,7 +746,7 @@
             pngFeedback.textContent = t('post_feedback_copied');
             pngFeedback.style.color = '#38bdf8';
           }
-        } catch (e) {
+        } catch {
           MeetingCardGenerator.downloadPNG(currentMeeting);
           if (pngFeedback) {
             pngFeedback.style.display = 'block';
@@ -680,13 +755,10 @@
           }
         }
       }
-      if (typeof MeetStorage !== 'undefined') {
-        await MeetStorage.saveMeeting(currentMeeting);
-      }
     });
 
-    async function handleSave(openDashboard = false) {
-      syncCurrentMetadata();
+    async function handleFinalSave(openDashboard = false) {
+      const finalMeeting = readSelectedMeetingRecord();
 
       if (selectEl && selectEl.value === '__custom__' && customInput && customInput.value.trim()) {
         if (typeof MeetStorage !== 'undefined') {
@@ -700,14 +772,11 @@
         }
       }
 
-      const finalMeeting = getCurrentMeetingObject();
-
       if (typeof MeetStorage !== 'undefined') {
         await MeetStorage.saveMeeting(finalMeeting);
       }
 
-      modalOverlay.remove();
-      removeHUD();
+      popupEl.remove();
 
       if (openDashboard && typeof chrome !== 'undefined' && chrome.runtime) {
         chrome.runtime.sendMessage({
@@ -717,33 +786,28 @@
       }
     }
 
-    document.getElementById('gmeet-btn-save-close')?.addEventListener('click', () => handleSave(false));
-    document.getElementById('gmeet-btn-save-open')?.addEventListener('click', () => handleSave(true));
+    popupEl.querySelector('#gmeet-btn-save-close')?.addEventListener('click', () => handleFinalSave(false));
+    popupEl.querySelector('#gmeet-btn-save-open')?.addEventListener('click', () => handleFinalSave(true));
   }
 
-  // Захист при раптовому закритті вкладки
+  // Захист при раптовому закритті вкладки під час активного уроку
   window.addEventListener('beforeunload', () => {
-    if (isMeetingActive || postModalShown) {
-      autoSaveSession(true);
+    if (isMeetingActive && !hasEndedCurrentCall) {
+      autoSaveSession();
     }
   });
 
-  // Оновлювати HUD при перемиканні мови у фоні
+  // Оновлювати HUD та попап при перемиканні мови у фоні
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'local' && changes.meet_language && typeof MeetI18n !== 'undefined') {
         if (hudElement) MeetI18n.applyToDOM(hudElement);
-        const modal = document.getElementById('gmeet-tracker-modal-overlay');
-        if (modal) {
-          MeetI18n.applyToDOM(modal);
-          const subEl = document.getElementById('gmeet-modal-subtitle-el');
-          if (subEl) subEl.innerHTML = t('post_modal_subtitle', { code: escapeHtml(currentMeetingCode) });
-        }
+        const sidePopup = document.getElementById('gmeet-tracker-side-popup');
+        if (sidePopup) MeetI18n.applyToDOM(sidePopup);
       }
     });
   }
 
-  // Моніторинг статусу кожну 1 секунду
   setInterval(checkPageStatus, 1000);
   checkPageStatus();
 })();
